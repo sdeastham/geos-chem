@@ -678,6 +678,8 @@
 
       CHARACTER(LEN=255) :: ErrMsg, ThisLoc, nLev
 
+      Real(fp), Allocatable :: Reverse_Temp(:)
+
       !=================================================================
       ! INIT_PRESSURE begins here!
       !=================================================================
@@ -886,6 +888,56 @@
          ENDDO
 
 #endif
+
+      ELSE IF ( State_Grid%NZ == 26 ) THEN
+
+      !-----------------------------------------------------------------
+      ! 26 level grid from CAM
+      !-----------------------------------------------------------------
+      ! darothen - this is a band-aid hack to inject our custom Ap/Bp
+      ! directly where they're used in the most general place. it's
+      ! proving difficult to more explicitly expose the ESMF arrays so
+      ! I copied/pasted from GMAO_hermes/m_set_eta.F90
+      
+         AP =(/ 219.4067_fp, 489.5209_fp, 988.2418_fp, 1805.201_fp,
+     &          2983.724_fp, 4462.334_fp, 6160.587_fp, 7851.243_fp, 
+     &          7731.271_fp, 7590.131_fp, 7424.086_fp, 7228.744_fp, 
+     &          6998.933_fp, 6728.574_fp, 6410.509_fp, 6036.322_fp, 
+     &          5596.111_fp, 5078.225_fp,  4468.96_fp, 3752.191_fp, 
+     &          2908.949_fp, 2084.739_fp, 1334.443_fp, 708.499_fp,  
+     &           252.136_fp, 0._fp,       0._fp /)
+
+            
+         BP =(/ 0._fp,        0._fp,        0._fp,        0._fp,    
+     &          0._fp,        0._fp,        0._fp,        0._fp,    
+     &          0.01505309_fp,0.03276228_fp,0.05359622_fp,0.07810627_fp,
+     &          0.1069411_fp, 0.14086370_fp,0.180772_fp,  0.227722_fp,  
+     &          0.2829562_fp, 0.3479364_fp, 0.4243822_fp, 0.5143168_fp, 
+     &          0.6201202_fp, 0.7235355_fp, 0.8176768_fp, 0.8962153_fp, 
+     &          0.9534761_fp, 0.9851122_fp, 1._fp /)
+
+         ! Reverse these arrays to match GCC convention
+         Allocate(Reverse_Temp(State_Grid%NZ + 1),Stat=AS)
+         IF ( AS /= 0 ) CALL ALLOC_ERR( 'Reverse_Temp' )
+         Reverse_Temp = 0e+0_fp
+
+         REVERSE_TEMP(:) = AP(:)
+         DO L = State_Grid%NZ+1, 1, -1
+            ! AP is actually AP * P0, s.t. P0 = 100000 Pa, so we correct here (dar, 9/18/17)
+            ! I think this might be wrong, and we don't actually want to correct here in
+            ! this way. I think these are in Pa and we just need to convert to hPa. This will
+            ! then exactly match GMAO_hermes/m_set_eta.F90 (dar, 9/23/17)
+            AP(L) = REVERSE_TEMP(State_Grid%NZ+2-L) / 1d+02
+            AP_FULLGRID(L) = AP(L)
+         END DO
+         REVERSE_TEMP(:) = BP(:)
+         DO L = State_Grid%NZ+1, 1, -1
+            ! BP is already in Pa so no correction necessary
+            BP(L) = REVERSE_TEMP(State_Grid%NZ+2-L)
+            BP_FULLGRID(L) = BP(L)
+         END DO
+
+         Deallocate(Reverse_Temp)
 
       ELSE
 
