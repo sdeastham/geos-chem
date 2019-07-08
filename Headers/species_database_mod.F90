@@ -178,6 +178,7 @@ CONTAINS
     REAL(fp)            :: DD_Hstar_Old     ! HSTAR, drydep [M/atm]
     LOGICAL             :: MP_SizeResAer    ! Size resolved aerosol?
     LOGICAL             :: MP_SizeResNum    ! Size resolved aer #?
+    INTEGER             :: MP_BinNumber     ! Size resolved aer # (integer)
     REAL(fp)            :: WD_RetFactor     ! Wetdep retention factor
     LOGICAL             :: WD_LiqAndGas     ! Liquid and gas phases?
     REAL(fp)            :: WD_ConvFacI2G    ! Factor for ice/gas ratio
@@ -261,6 +262,7 @@ CONTAINS
                       oDD_Hstar_Old   = DD_Hstar_Old,                        &
                       oMP_SizeResAer  = MP_SizeResAer,                       &
                       oMP_SizeResNum  = MP_SizeResNum,                       &
+                      oMP_BinNumber   = MP_BinNumber ,                       &
                       oWD_RetFactor   = WD_RetFactor,                        &
                       oWD_LiqAndGas   = WD_LiqAndGas,                        &
                       oWD_ConvFacI2G  = WD_ConvFacI2G,                       &
@@ -321,6 +323,7 @@ CONTAINS
                         DD_Hstar_Old   = DD_Hstar_Old,                       &
                         MP_SizeResAer  = MP_SizeResAer,                      &
                         MP_SizeResNum  = MP_SizeResNum,                      &
+                        MP_BinNumber   = MP_BinNumber ,                      &
                         WD_RetFactor   = WD_RetFactor,                       &
                         WD_LiqAndGas   = WD_LiqAndGas,                       &
                         WD_ConvFacI2G  = WD_ConvFacI2G,                      &
@@ -383,6 +386,7 @@ CONTAINS
                        oDD_AeroDryDep,  oDD_DustDryDep, oDD_DvzAerSnow,      &
                        oDD_DvzMinVal,   oDD_F0,         oDD_KOA,             &
                        oDD_HStar_Old,   oMP_SizeResAer, oMP_SizeResNum,      &
+                       oMP_BinNumber,                                    &
                        oWD_RetFactor,   oWD_LiqAndGas,  oWD_ConvFacI2G,      &
                        oWD_AerScavEff,  oWD_KcScaleFac, oWD_RainoutEff,      &
                        oWD_CoarseAer,   oIs_DryAlt,                          &
@@ -428,6 +432,7 @@ CONTAINS
     REAL(fp),INTENT(OUT), OPTIONAL    :: oDD_Hstar_Old     ! HSTAR, drydep [M/atm]
     LOGICAL, INTENT(OUT), OPTIONAL    :: oMP_SizeResAer    ! Size resolved aerosol?
     LOGICAL, INTENT(OUT), OPTIONAL    :: oMP_SizeResNum    ! Size resolved aer #?
+    INTEGER, INTENT(OUT), OPTIONAL    :: oMP_BinNumber     ! Size resolved aer # (integer)
     REAL(fp),INTENT(OUT), OPTIONAL    :: oWD_RetFactor     ! Wetdep retention factor
     LOGICAL, INTENT(OUT), OPTIONAL    :: oWD_LiqAndGas     ! Liquid and gas phases?
     REAL(fp),INTENT(OUT), OPTIONAL    :: oWD_ConvFacI2G    ! Factor for ice/gas ratio
@@ -487,6 +492,7 @@ CONTAINS
     REAL(fp)            :: DD_Hstar_Old     ! HSTAR, drydep [M/atm]
     LOGICAL             :: MP_SizeResAer    ! Size resolved aerosol?
     LOGICAL             :: MP_SizeResNum    ! Size resolved aer #?
+    INTEGER             :: MP_BinNumber     ! Size resolved aer # (integer)
     REAL(fp)            :: WD_RetFactor     ! Wetdep retention factor
     LOGICAL             :: WD_LiqAndGas     ! Liquid and gas phases?
     REAL(fp)            :: WD_ConvFacI2G    ! Factor for ice/gas ratio
@@ -514,7 +520,13 @@ CONTAINS
     LOGICAL             :: IsPassive
     LOGICAL             :: Uscore
     INTEGER             :: C !ramnarine 12/2018
-
+   
+    ! For sectional aerosols
+    LOGICAL             :: IsSectAer
+    LOGICAL             :: IsNotValid
+    INTEGER             :: Bin_Num
+    INTEGER             :: IOS
+ 
     CHARACTER(LEN=8)    :: sMW
 
     ! Arrays
@@ -568,6 +580,7 @@ CONTAINS
     WD_CoarseAer     = .FALSE.
     MP_SizeResAer    = .FALSE.
     MP_SizeResNum    = .FALSE.
+    MP_BinNumber     = 0
     Is_Hg0           = .FALSE.
     Is_Hg2           = .FALSE.
     Is_HgP           = .FALSE.
@@ -6074,6 +6087,12 @@ CONTAINS
              ! Check if passive species
              IsPassive = .FALSE.
 
+             ! Check if sectional aerosol
+             IsSectAer = .FALSE.
+
+             ! Start by assuming no valid solution
+             IsNotValid = .TRUE.
+
              IF ( Present(Input_Opt) ) THEN
                 IF ( Input_Opt%NPASSIVE > 0 ) THEN
 
@@ -6086,6 +6105,7 @@ CONTAINS
 
                       IF ( TRIM(Name) == TRIM(PName) ) THEN
                          IsPassive    = .TRUE.
+                         IsNotValid   = .FALSE.
                          BackgroundVV = Input_Opt%PASSIVE_INITCONC(P)
                          MW_g         = Input_Opt%PASSIVE_MW(P)
                          FullName     = TRIM(Input_Opt%PASSIVE_LONGNAME(P))
@@ -6094,6 +6114,58 @@ CONTAINS
                    ENDDO
                 ENDIF
              ENDIF
+
+             ! Test if this is a sectional aerosol bin
+             If ((.not. IsPassive) .and. (Len_Trim(Name) .eq. 12) .and. &
+                 ( Name(1:6) == 'AERSCT' )) Then
+                IsSectAer = .True.
+                IsNotValid = .False.
+                ! Which bin number is this? 
+                Read(Name(10:12),*,IOSTAT=IOS) Bin_Num
+                If (IOS.ne.0) Then
+                   IsNotValid = .True.
+                ! Which aerosol is it?
+                ElseIf (Name(7:9) == 'SUL') Then
+                   ! Size-resolved stratospheric sulfate
+
+                   ! Halve the Kc (cloud condensate -> precip) rate
+                   ! for the temperature range 237 K <= T < 258 K.
+                   KcScale       = (/ 1.0_fp, 0.5_fp, 1.0_fp /)
+
+                   ! Turn off rainout only when 237 K <= T < 258K.
+                   RainEff       = (/ 1.0_fp, 0.0_fp, 1.0_fp /)
+
+                   ! Enforce minimum dry deposition velocity (Vd) for SO4
+                   ! (cf. Mian Chin's GOCART model)
+                   ! Minimum Vd over snow/ice : 0.01 cm/s
+                   ! Minimum Vd over land     : 0.01 cm/s
+                   DvzMinVal     = (/ 0.01_fp, 0.01_fp /)
+
+                   Write(FullName,'(a,I0.3)') 'Strat sulfate bin ', Bin_Num
+                   Formula       = 'SO4'
+                   MW_g          = 96.0_fp
+                   Is_Gas        = F
+                   Is_Drydep     = T
+                   Is_Wetdep     = T
+                   Is_Photolysis = T
+                   Is_HygroGrowth= T
+                   Density       = 1700.0_fp
+                   DD_DvzAerSnow = 0.03_fp
+                   DD_DvzMinVal  = DvzMinVal
+                   DD_F0         = 0.0_fp
+                   DD_Hstar_Old  = 0.0_fp
+                   WD_AerScavEff = 1.0_fp
+                   WD_KcScaleFac = KcScale
+                   WD_RainoutEff = RainEff
+                   MP_SizeResAer = .True.
+                   MP_SizeResNum = .False.
+                   MP_BinNumber  = Bin_Num
+                Else
+                   ! Aerosol type not recognized
+                   IsNotValid = .True.
+                   Write(*,'(a,a)') ' --ERROR--> Could not recognize: ', Trim(Name)
+                End If
+             End If
 
              !---------------------------------------------------------------
              ! Add passive species if it is listed in the optional passive
@@ -6127,8 +6199,8 @@ CONTAINS
                 Is_Gas        = T
                 Is_Drydep     = F
                 Is_Wetdep     = F
-
-             ELSE
+             
+             ELSEIF (IsNotValid) THEN
 
                 IF ( Present(Found) ) THEN
                    Found = .FALSE.
@@ -6198,6 +6270,7 @@ CONTAINS
     IF ( PRESENT( oWD_CoarseAer   ) ) oWD_CoarseAer     = WD_CoarseAer
     IF ( PRESENT( oMP_SizeResAer  ) ) oMP_SizeResAer    = MP_SizeResAer
     IF ( PRESENT( oMP_SizeResNum  ) ) oMP_SizeResNum    = MP_SizeResNum
+    IF ( PRESENT( oMP_BinNumber   ) ) oMP_BinNumber     = MP_BinNumber 
     IF ( PRESENT( oIs_Hg0         ) ) oIs_Hg0           = Is_Hg0
     IF ( PRESENT( oIs_Hg2         ) ) oIs_Hg2           = Is_Hg2
     IF ( PRESENT( oIs_HgP         ) ) oIs_HgP           = Is_HgP

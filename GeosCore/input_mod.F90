@@ -1646,6 +1646,43 @@ CONTAINS
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%LMPOA
 
+    ! Use sectional microphysics for strat sulfur aerosol?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LSTRATMICRO', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%LStratMicro 
+
+    ! Debug options for sectional microphyiscs
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LAER_NUC', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%LAER_nuc
+
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LAER_GROW', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%LAER_grow
+
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LAER_COAG', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%LAER_coag
+
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LAER_SED', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%LAER_sed
+
     ! Apply gravitational settling in stratosphere?
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LGRAVSTRAT', RC )
     IF ( RC /= GC_SUCCESS ) THEN
@@ -1796,6 +1833,7 @@ CONTAINS
        Input_Opt%LDUST        = .FALSE.
        Input_Opt%LSSALT       = .FALSE.
        Input_Opt%LMPOA        = .FALSE.
+       Input_Opt%LStratMicro  = .FALSE.
        Input_Opt%LSVPOA       = .FALSE.
        Input_Opt%LBCAE        = .FALSE.
        Input_Opt%hvAerNIT     = .FALSE.
@@ -1836,6 +1874,16 @@ CONTAINS
                             Input_Opt%SALC_REDGE_um(2)
        WRITE( 6, 100     ) 'MARINE ORGANIC AEROSOLS?    : ', &
                             Input_Opt%LMPOA
+       WRITE( 6, 100     ) 'Sectional uphys in strat?   : ', &
+                            Input_Opt%LStratMicro
+       WRITE( 6, 100     ) ' => Nucleation?             : ', &
+                            Input_Opt%LAER_nuc
+       WRITE( 6, 100     ) ' => Growth/evaporation?     : ', &
+                            Input_Opt%LAER_grow
+       WRITE( 6, 100     ) ' => Coagulation?            : ', &
+                            Input_Opt%LAER_coag
+       WRITE( 6, 100     ) ' => Sedimentation?          : ', &
+                            Input_Opt%LAER_sed
        WRITE( 6, 100     ) 'Settle strat. aerosols?     : ', &
                             Input_Opt%LGRAVSTRAT
        WRITE( 6, 100     ) 'Online SOLID PSC aerosols?  : ', &

@@ -71,6 +71,7 @@ MODULE State_Chm_Mod
      INTEGER                    :: nAeroSpc             ! # of Aerosol Species
      INTEGER                    :: nAeroType            ! # of Aerosol Types
      INTEGER                    :: nDryAlt              ! # dryalt species
+     INTEGER                    :: nAeroSpc             ! # of Aerosol Tracers
      INTEGER                    :: nDryDep              ! # drydep species
      INTEGER                    :: nGasSpc              ! # gas phase species
      INTEGER                    :: nHygGrth             ! # hygroscopic growth
@@ -141,6 +142,8 @@ MODULE State_Chm_Mod
      REAL(fp),          POINTER :: SO2AfterChem (:,:,:) !  after sulfate chem
      REAL(fp),          POINTER :: OMOC_POA       (:,:) ! OM:OC Ratio (OCFPOA) [unitless]
      REAL(fp),          POINTER :: OMOC_OPOA      (:,:) ! OM:OC Ratio (OCFOPOA) [unitless]
+     REAL(fp),          POINTER :: Strat_Den  (:,:,:,:) ! Sectional aerosol density (g/cm3)
+     REAL(fp),          POINTER :: Strat_WPcg (:,:,:,:) ! Sectional aerosol wt pcg (%)
 
      !----------------------------------------------------------------------
      ! Fields for nitrogen deposition
@@ -305,7 +308,7 @@ CONTAINS
     ! Scalars
     INTEGER                :: N, C, IM, JM, LM
     INTEGER                :: N_Hg0_CATS, N_Hg2_CATS, N_HgP_CATS
-    INTEGER                :: nKHLSA, nAerosol, nMatches
+    INTEGER                :: nKHLSA, nAerosol, nMatches, nBin
 
     ! Strings
     CHARACTER(LEN=255)     :: ErrMsg, ThisLoc, ChmID
@@ -353,7 +356,6 @@ CONTAINS
     State_Chm%nPhotol           =  0
     State_Chm%nProd             =  0
     State_Chm%nWetDep           =  0
-
 
     ! Mapping vectors for subsetting each type of species
     State_Chm%Map_Advect        => NULL()
@@ -418,6 +420,10 @@ CONTAINS
     ! Fields for sulfate chemistry
     State_Chm%H2O2AfterChem     => NULL()
     State_Chm%SO2AfterChem      => NULL()
+
+    ! Fields for sectional aerosols
+    State_Chm%Strat_Den     => NULL()
+    State_Chm%Strat_WPcg    => NULL()
 
     ! Fields for nitrogen deposition
     State_Chm%DryDepNitrogen    => NULL()
@@ -1555,6 +1561,39 @@ CONTAINS
        ENDDO
     ENDIF
 
+    If (Input_Opt%ITS_A_FULLCHEM_SIM.and.Input_Opt%LStratMicro) Then
+       !--------------------------------------------------------------------
+       ! KHETI_SLA
+       !-------------------------------------------------------------------
+       nBin = 40  ! TODO: Need to get this from somewhere else
+       ALLOCATE( State_Chm%Strat_WPcg ( IM, JM, LM, nBin ), STAT=RC )
+       CALL GC_CheckVar( 'State_Chm%Strat_WPcg', 0, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+       State_Chm%Strat_WPcg = 60.0_fp
+       
+       ALLOCATE( State_Chm%Strat_Den  ( IM, JM, LM, nBin ), STAT=RC )
+       CALL GC_CheckVar( 'State_Chm%Strat_Den', 0, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+       State_Chm%Strat_Den = 1.5_fp
+       
+       ! Loop over each bin
+       DO N = 1, nBin
+          ! Register each aerosol bin for weight percentage SO4
+          Write(chmID,'(a,I0.3)') 'StratWPcg', N
+          CALL Register_ChmField( am_I_Root, chmID, State_Chm%Strat_WPcg, &
+                                  State_Chm, RC,    Ncat=N )
+          CALL GC_CheckVar( 'State_Chm%Strat_WPcg', 1, RC )
+          IF ( RC /= GC_SUCCESS ) RETURN
+
+          ! Repeat for stratospheric aerosol density
+          Write(chmID,'(a,I0.3)') 'StratDen', N
+          CALL Register_ChmField( am_I_Root, chmID, State_Chm%Strat_Den, &
+                                  State_Chm, RC,    Ncat=N )
+          CALL GC_CheckVar( 'State_Chm%Strat_Den', 1, RC )
+          IF ( RC /= GC_SUCCESS ) RETURN
+       End Do
+    End If
+
     !=======================================================================
     ! Special handling for the Hg and tagHg simulations: get the # of Hg
     ! categories for total & tagged tracers from the species database
@@ -2404,7 +2443,8 @@ CONTAINS
 !
     CHARACTER(LEN=255) :: ErrMsg, ThisLoc, Name_AllCaps
     LOGICAL            :: isDesc, isUnits, isRank, isType, isVLoc, isSpecies
-
+    Integer            :: I_Bin
+    
     !=======================================================================
     ! Initialize
     !=======================================================================
@@ -3069,12 +3109,29 @@ CONTAINS
           IF ( isRank  ) Rank  = 3
 
        CASE DEFAULT
-          Found = .False.
-          ErrMsg = 'Metadata not found for State_Chm field ' // &
-                   TRIM( metadataID ) // ' when search for all caps name ' &
-                   // TRIM( Name_AllCaps )
-          CALL GC_Error( ErrMsg, RC, ThisLoc )
-          IF ( RC /= GC_SUCCESS ) RETURN
+          ! Some names are generated procedurally
+          If ( (Len_Trim(Name_AllCaps) .ge. 12) .and. (Name_AllCaps(1:9) == 'STRATWPCG')) Then
+             Read(Name_AllCaps(10:12),*) I_Bin
+             If ( isDesc ) Then
+                Write(Desc,'(a,I3)') 'Sulfate weight pcg of strat sulfate in bin ', I_Bin
+             End If
+             If ( isUnits ) Units = '%'
+             If ( isRank  ) Rank = 3
+          Else If ( (Len_Trim(Name_AllCaps) .ge. 11) .and. (Name_AllCaps(1:8) == 'STRATDEN')) Then
+             Read(Name_AllCaps(9:11),*) I_Bin
+             If ( isDesc ) Then
+                Write(Desc,'(a,I3)') 'Mass density of strat sulfate in bin ', I_Bin
+             End If
+             If ( isUnits ) Units = 'g/cm3'
+             If ( isRank  ) Rank = 3
+          Else
+             Found = .False.
+             ErrMsg = 'Metadata not found for State_Chm field ' // &
+                      TRIM( metadataID ) // ' when search for all caps name ' &
+                      // TRIM( Name_AllCaps )
+             CALL GC_Error( ErrMsg, RC, ThisLoc )
+             IF ( RC /= GC_SUCCESS ) RETURN
+          End If
 
     END SELECT
 
