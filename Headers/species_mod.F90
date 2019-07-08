@@ -154,6 +154,7 @@ MODULE Species_Mod
      ! Microphysics parameters
      LOGICAL            :: MP_SizeResAer    ! T=size-resolved aerosol (TOMAS)
      LOGICAL            :: MP_SizeResNum    ! T=size-resolved aerosol number
+     INTEGER            :: MP_BinNumber     ! Bin number
 
      ! Tagged mercury parameters
      LOGICAL            :: Is_Hg0           ! T=total or tagged Hg0 species
@@ -410,6 +411,7 @@ CONTAINS
                          DD_AeroDryDep,  DD_DustDryDep, DD_DvzAerSnow,       &
                          DD_DvzMinVal,   DD_F0,         DD_KOA,              &
                          DD_HStar_Old,   MP_SizeResAer, MP_SizeResNum,       &
+                         MP_BinNumber,                                       &
                          WD_RetFactor,   WD_LiqAndGas,  WD_ConvFacI2G,       &
                          WD_AerScavEff,  WD_KcScaleFac, WD_RainoutEff,       &
                          WD_CoarseAer,   Is_Advected,   Is_DryAlt,           &
@@ -461,6 +463,7 @@ CONTAINS
     !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     LOGICAL,          OPTIONAL    :: MP_SizeResAer    ! Size resolved aerosol?
     LOGICAL,          OPTIONAL    :: MP_SizeResNum    ! Size resolved aer #?
+    INTEGER,          OPTIONAL    :: MP_BinNumber     ! Bin number (sectional)
     REAL(fp),         OPTIONAL    :: WD_RetFactor     ! Wetdep retention factor
     LOGICAL,          OPTIONAL    :: WD_LiqAndGas     ! Liquid and gas phases?
     REAL(fp),         OPTIONAL    :: WD_ConvFacI2G    ! Factor for ice/gas ratio
@@ -1014,6 +1017,15 @@ CONTAINS
        ThisSpc%MP_SizeResNum = MP_SizeResNum
     ELSE
        ThisSpc%MP_SizeResNum = .FALSE.
+    ENDIF
+
+    !---------------------------------------------------------------------
+    ! If size-resolved, what is the bin number?
+    !---------------------------------------------------------------------
+    IF ( PRESENT( MP_BinNumber ) ) THEN
+       ThisSpc%MP_BinNumber = MP_BinNumber
+    ELSE
+       ThisSpc%MP_SizeResNum = 0
     ENDIF
 
     !---------------------------------------------------------------------

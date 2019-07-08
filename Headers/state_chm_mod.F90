@@ -62,8 +62,9 @@ MODULE State_Chm_Mod
      !----------------------------------------------------------------------
      INTEGER                    :: nSpecies             ! # species (all)
      INTEGER                    :: nAdvect              ! # advected species
-     INTEGER                    :: nAero                ! # of Aerosol Types
+     INTEGER                    :: nAeroType            ! # of Aerosol Types
      INTEGER                    :: nDryAlt              ! # dryalt species
+     INTEGER                    :: nAeroSpc             ! # of Aerosol Tracers
      INTEGER                    :: nDryDep              ! # drydep species
      INTEGER                    :: nGasSpc              ! # gas phase species
      INTEGER                    :: nHygGrth             ! # hygroscopic growth
@@ -132,6 +133,8 @@ MODULE State_Chm_Mod
      REAL(fp),          POINTER :: SO2AfterChem (:,:,:) !  after sulfate chem
      REAL(fp),          POINTER :: OMOC_POA       (:,:) ! OM:OC Ratio (OCFPOA) [unitless]
      REAL(fp),          POINTER :: OMOC_OPOA      (:,:) ! OM:OC Ratio (OCFOPOA) [unitless]
+     REAL(fp),          POINTER :: Strat_Den  (:,:,:,:) ! Sectional aerosol density (g/cm3)
+     REAL(fp),          POINTER :: Strat_WPcg (:,:,:,:) ! Sectional aerosol wt pcg (%)
 
      !----------------------------------------------------------------------
      ! Fields for nitrogen deposition
@@ -292,7 +295,7 @@ CONTAINS
     ! Scalars
     INTEGER                :: N, C, IM, JM, LM
     INTEGER                :: N_Hg0_CATS, N_Hg2_CATS, N_HgP_CATS
-    INTEGER                :: nKHLSA, nAerosol
+    INTEGER                :: nKHLSA, nAerosol, nBin
 
     ! Strings
     CHARACTER(LEN=255)     :: ErrMsg, ThisLoc, ChmID
@@ -326,8 +329,9 @@ CONTAINS
     ! Number of each type of species
     State_Chm%nSpecies      =  0
     State_Chm%nAdvect       =  0
-    State_Chm%nAero         =  0
+    State_Chm%nAeroType     =  0
     State_Chm%nDryAlt       =  0
+    State_Chm%nAeroSpc      =  0
     State_Chm%nDryDep       =  0
     State_Chm%nGasSpc       =  0
     State_Chm%nHygGrth      =  0
@@ -402,6 +406,10 @@ CONTAINS
     ! Fields for sulfate chemistry
     State_Chm%H2O2AfterChem => NULL()
     State_Chm%SO2AfterChem  => NULL()
+
+    ! Fields for sectional aerosols
+    State_Chm%Strat_Den     => NULL()
+    State_Chm%Strat_WPcg    => NULL()
 
     ! Fields for nitrogen deposition
     State_Chm%DryDepNitrogen=> NULL()
@@ -479,7 +487,7 @@ CONTAINS
     ! and and wet-deposited species.  Also return the # of Hg0, Hg2, and 
     ! HgP species (these are zero unless the Hg simulation is used).
     CALL Spc_GetNumSpecies( nAdvect  = State_Chm%nAdvect,                  &
-                            nAero    = State_Chm%nAero,                    &
+                            nAero    = State_Chm%nAeroSpc,                 &
                             nDryAlt  = State_Chm%nDryAlt,                  &
                             nDryDep  = State_Chm%nDryDep,                  &
                             nGasSpc  = State_Chm%nGasSpc,                  &
@@ -546,8 +554,8 @@ CONTAINS
        RETURN
     ENDIF
 
-    IF ( State_Chm%nAero > 0 ) THEN
-       ALLOCATE( State_Chm%Map_Aero( State_Chm%nAero ), STAT=RC )
+    IF ( State_Chm%nAeroSpc > 0 ) THEN
+       ALLOCATE( State_Chm%Map_Aero( State_Chm%nAeroSpc ), STAT=RC )
        CALL GC_CheckVar( 'State_Chm%Map_Aero', 0, RC )
        IF ( RC /= GC_SUCCESS ) RETURN
        State_Chm%Map_Aero = 0
@@ -815,18 +823,18 @@ CONTAINS
     IF ( Input_Opt%ITS_A_FULLCHEM_SIM .or. Input_Opt%ITS_AN_AEROSOL_SIM ) THEN
 
        ! Save nAerosol to State_Chm
-       State_Chm%nAero = nAerosol
+       State_Chm%nAeroType = nAerosol
 
        !--------------------------------------------------------------------
        ! AeroArea
        !--------------------------------------------------------------------
-       ALLOCATE( State_Chm%AeroArea( IM, JM, LM, State_Chm%nAero ), STAT=RC )
+       ALLOCATE( State_Chm%AeroArea( IM, JM, LM, State_Chm%nAeroType ), STAT=RC )
        CALL GC_CheckVar( 'State_Chm%AeroArea', 0, RC )
        IF ( RC /= GC_SUCCESS ) RETURN
        State_Chm%AeroArea = 0.0_fp
 
        ! Loop over all entries to register each category individually
-       DO N = 1, State_Chm%nAero
+       DO N = 1, State_Chm%nAeroType
 
           ! Define identifying string
           SELECT CASE( N )
@@ -859,7 +867,7 @@ CONTAINS
              CASE( 14 )
                 chmID  = 'AeroAreaICEI'
              CASE DEFAULT
-                ErrMsg = 'State_Chm%nAero exceeds the number of defined'    &
+                ErrMsg = 'State_Chm%nAeroType exceeds the number of defined'    &
                          // ' dry aerosol area categories'
                 CALL GC_Error( ErrMsg, RC, ThisLoc )
                 RETURN
@@ -874,13 +882,13 @@ CONTAINS
        !--------------------------------------------------------------------
        ! AeroRadi
        !--------------------------------------------------------------------
-       ALLOCATE( State_Chm%AeroRadi( IM, JM, LM, State_Chm%nAero ), STAT=RC )
+       ALLOCATE( State_Chm%AeroRadi( IM, JM, LM, State_Chm%nAeroType ), STAT=RC )
        CALL GC_CheckVar( 'State_Chm%AeroRadi', 0, RC )
        IF ( RC /= GC_SUCCESS ) RETURN
        State_Chm%AeroRadi    = 0.0_fp
 
        ! Loop over all entries to register each category individually
-       DO N = 1, State_Chm%nAero
+       DO N = 1, State_Chm%nAeroType
 
           ! Define identifying string
           SELECT CASE( N )
@@ -913,7 +921,7 @@ CONTAINS
              CASE( 14 )
                 chmID = 'AeroRadiICEI'     
              CASE DEFAULT
-                ErrMsg = 'State_Chm%nAero exceeds the number of defined'     &
+                ErrMsg = 'State_Chm%nAeroType exceeds the number of defined'     &
                          // ' dry aerosol radius categories'
                 CALL GC_Error( ErrMsg, RC, ThisLoc )
                 RETURN
@@ -928,13 +936,13 @@ CONTAINS
        !--------------------------------------------------------------------
        ! WetAeroArea
        !--------------------------------------------------------------------
-       ALLOCATE( State_Chm%WetAeroArea( IM, JM, LM, State_Chm%nAero ), STAT=RC )
+       ALLOCATE( State_Chm%WetAeroArea( IM, JM, LM, State_Chm%nAeroType ), STAT=RC )
        CALL GC_CheckVar( 'State_Chm%WetAeroArea', 0, RC )
        IF ( RC /= GC_SUCCESS ) RETURN
        State_Chm%WetAeroArea = 0.0_fp
 
        ! Loop over all entries to register each category individually
-       DO N = 1, State_Chm%nAero
+       DO N = 1, State_Chm%nAeroType
 
           ! Define identifying string
           SELECT CASE( N )
@@ -967,7 +975,7 @@ CONTAINS
              CASE( 14 )
                 chmID = 'WetAeroAreaICEI'
              CASE DEFAULT
-                ErrMsg = 'State_Chm%nAero exceeds the number of defined'     &
+                ErrMsg = 'State_Chm%nAeroType exceeds the number of defined'     &
                          // ' wet aerosol area categories'
                 CALL GC_Error( ErrMsg, RC, ThisLoc )
                 RETURN
@@ -982,13 +990,13 @@ CONTAINS
        !--------------------------------------------------------------------
        ! WetAeroRadi
        !--------------------------------------------------------------------
-       ALLOCATE( State_Chm%WetAeroRadi( IM, JM, LM, State_Chm%nAero ), STAT=RC )
+       ALLOCATE( State_Chm%WetAeroRadi( IM, JM, LM, State_Chm%nAeroType ), STAT=RC )
        CALL GC_CheckVar( 'State_Chm%WetAeroRadi', 0, RC )
        IF ( RC /= GC_SUCCESS ) RETURN
        State_Chm%WetAeroRadi = 0.0_fp
 
        ! Loop over all entries to register each category individually
-       DO N = 1, State_Chm%nAero
+       DO N = 1, State_Chm%nAeroType
 
           ! Define identifying string
           SELECT CASE( N )
@@ -1021,7 +1029,7 @@ CONTAINS
              CASE( 14 )
                 chmID = 'WetAeroRadiICEI'
              CASE DEFAULT
-                ErrMsg = 'State_Chm%nAero exceeds the number of defined'     &
+                ErrMsg = 'State_Chm%nAeroType exceeds the number of defined'     &
                          // ' wet aerosol radius categories'
                 CALL GC_Error( ErrMsg, RC, ThisLoc )
                 RETURN
@@ -1036,13 +1044,13 @@ CONTAINS
        !--------------------------------------------------------------------
        ! AeroH2O
        !--------------------------------------------------------------------
-       ALLOCATE( State_Chm%AeroH2O( IM, JM, LM, State_Chm%nAero ), STAT=RC )
+       ALLOCATE( State_Chm%AeroH2O( IM, JM, LM, State_Chm%nAeroType ), STAT=RC )
        CALL GC_CheckVar( 'State_Chm%AeroH2O', 0, RC )
        IF ( RC /= GC_SUCCESS ) RETURN
        State_Chm%AeroH2O = 0.0_fp
 
        ! Loop over all entries to register each category individually
-       DO N = 1, State_Chm%nAero
+       DO N = 1, State_Chm%nAeroType
 
           ! Define identifying string
           SELECT CASE( N )
@@ -1075,7 +1083,7 @@ CONTAINS
              CASE( 14 )
                 chmID = 'AeroH2OICEI'
              CASE DEFAULT
-                ErrMsg = 'State_Chm%nAero exceeds the number of defined'     &
+                ErrMsg = 'State_Chm%nAeroType exceeds the number of defined'     &
                          // ' aerosol H2O categories'
                 CALL GC_Error( ErrMsg, RC, ThisLoc )
                 RETURN
@@ -1467,6 +1475,39 @@ CONTAINS
           IF ( RC /= GC_SUCCESS ) RETURN
        ENDDO
     ENDIF
+
+    If (Input_Opt%ITS_A_FULLCHEM_SIM.and.Input_Opt%LStratMicro) Then
+       !--------------------------------------------------------------------
+       ! KHETI_SLA
+       !-------------------------------------------------------------------
+       nBin = 40  ! TODO: Need to get this from somewhere else
+       ALLOCATE( State_Chm%Strat_WPcg ( IM, JM, LM, nBin ), STAT=RC )
+       CALL GC_CheckVar( 'State_Chm%Strat_WPcg', 0, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+       State_Chm%Strat_WPcg = 60.0_fp
+       
+       ALLOCATE( State_Chm%Strat_Den  ( IM, JM, LM, nBin ), STAT=RC )
+       CALL GC_CheckVar( 'State_Chm%Strat_Den', 0, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+       State_Chm%Strat_Den = 1.5_fp
+       
+       ! Loop over each bin
+       DO N = 1, nBin
+          ! Register each aerosol bin for weight percentage SO4
+          Write(chmID,'(a,I0.3)') 'StratWPcg', N
+          CALL Register_ChmField( am_I_Root, chmID, State_Chm%Strat_WPcg, &
+                                  State_Chm, RC,    Ncat=N )
+          CALL GC_CheckVar( 'State_Chm%Strat_WPcg', 1, RC )
+          IF ( RC /= GC_SUCCESS ) RETURN
+
+          ! Repeat for stratospheric aerosol density
+          Write(chmID,'(a,I0.3)') 'StratDen', N
+          CALL Register_ChmField( am_I_Root, chmID, State_Chm%Strat_Den, &
+                                  State_Chm, RC,    Ncat=N )
+          CALL GC_CheckVar( 'State_Chm%Strat_Den', 1, RC )
+          IF ( RC /= GC_SUCCESS ) RETURN
+       End Do
+    End If
 
     !=======================================================================
     ! Special handling for the Hg and tagHg simulations: get the # of Hg
@@ -2274,6 +2315,7 @@ CONTAINS
 !
     CHARACTER(LEN=255) :: ErrMsg, ThisLoc, Name_AllCaps
     LOGICAL            :: isDesc, isUnits, isRank, isType, isVLoc, isSpecies
+    Integer            :: I_Bin
     
     !=======================================================================
     ! Initialize
@@ -2929,12 +2971,29 @@ CONTAINS
           IF ( isRank  ) Rank  = 4
 
        CASE DEFAULT
-          Found = .False.
-          ErrMsg = 'Metadata not found for State_Chm field ' // &
-                   TRIM( metadataID ) // ' when search for all caps name ' &
-                   // TRIM( Name_AllCaps )
-          CALL GC_Error( ErrMsg, RC, ThisLoc )
-          IF ( RC /= GC_SUCCESS ) RETURN
+          ! Some names are generated procedurally
+          If ( (Len_Trim(Name_AllCaps) .ge. 12) .and. (Name_AllCaps(1:9) == 'STRATWPCG')) Then
+             Read(Name_AllCaps(10:12),*) I_Bin
+             If ( isDesc ) Then
+                Write(Desc,'(a,I3)') 'Sulfate weight pcg of strat sulfate in bin ', I_Bin
+             End If
+             If ( isUnits ) Units = '%'
+             If ( isRank  ) Rank = 3
+          Else If ( (Len_Trim(Name_AllCaps) .ge. 11) .and. (Name_AllCaps(1:8) == 'STRATDEN')) Then
+             Read(Name_AllCaps(9:11),*) I_Bin
+             If ( isDesc ) Then
+                Write(Desc,'(a,I3)') 'Mass density of strat sulfate in bin ', I_Bin
+             End If
+             If ( isUnits ) Units = 'g/cm3'
+             If ( isRank  ) Rank = 3
+          Else
+             Found = .False.
+             ErrMsg = 'Metadata not found for State_Chm field ' // &
+                      TRIM( metadataID ) // ' when search for all caps name ' &
+                      // TRIM( Name_AllCaps )
+             CALL GC_Error( ErrMsg, RC, ThisLoc )
+             IF ( RC /= GC_SUCCESS ) RETURN
+          End If
 
     END SELECT
 

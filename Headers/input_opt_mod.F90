@@ -110,6 +110,11 @@ MODULE Input_Opt_Mod
      LOGICAL                     :: LDSTUP
      REAL(fp),           POINTER :: SALA_REDGE_um(:)
      REAL(fp),           POINTER :: SALC_REDGE_um(:)
+     LOGICAL                     :: LStratMicro
+     LOGICAL                     :: LAER_Nuc
+     LOGICAL                     :: LAER_Grow
+     LOGICAL                     :: LAER_Coag
+     LOGICAL                     :: LAER_Sed
      LOGICAL                     :: LGRAVSTRAT
      LOGICAL                     :: LSOLIDPSC
      LOGICAL                     :: LHOMNUCNAT
@@ -774,6 +779,12 @@ CONTAINS
     Input_Opt%hvAerNIT_JNITs         = 0e+0_fp
     Input_Opt%JNITChanA              = 0e+0_fp
     Input_Opt%JNITChanB              = 0e+0_fp
+
+    Input_Opt%LStratMicro            = .FALSE.
+    Input_Opt%LAER_Nuc               = .FALSE.
+    Input_Opt%LAER_Grow              = .FALSE.
+    Input_Opt%LAER_Coag              = .FALSE.
+    Input_Opt%LAER_Sed               = .FALSE.
 
     !----------------------------------------
     ! EMISSIONS MENU fields
