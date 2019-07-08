@@ -389,7 +389,8 @@ chemistry_mod.o             : chemistry_mod.F90                              \
                               carbon_mod.o                                   \
                               dust_mod.o              drydep_mod.o           \
                               global_ch4_mod.o        mercury_mod.o          \
-                              pops_mod.o              apm_driv_mod.o         \
+                              pops_mod.o              sect_aer_mod.o         \
+                              apm_driv_mod.o                                 \
                               rpmares_mod.o           RnPbBe_mod.o           \
                               seasalt_mod.o           strat_chem_mod.o       \
                               sulfate_mod.o           tagged_co_mod.o        \
@@ -417,7 +418,8 @@ cleanup.o                   : cleanup.F90                                    \
                               tpcore_window_mod.o     flexchem_mod.o         \
                               toms_mod.o              emissions_mod.o        \
                               set_global_ch4_mod.o    pops_mod.o             \
-                              rrtmg_rad_transfer_mod.o
+                              rrtmg_rad_transfer_mod.o                       \
+                              sect_aer_mod.o
 
 cldice_HBrHOBr_rxn.o        : cldice_HBrHOBr_rxn.F90
 
@@ -659,6 +661,10 @@ seasalt_mod.o               : seasalt_mod.F90                                \
                               hco_interface_mod.o
 
 
+sect_aer_mod.o              : sect_aer_mod.F90        sect_aer_data_mod.o
+
+sect_aer_data_mod.o         : sect_aer_data_mod.F90
+
 set_global_ch4_mod.o        : set_global_ch4_mod.F90                         \
                               pbl_mix_mod.o
 
@@ -706,7 +712,8 @@ transport_mod.o             : transport_mod.F90                              \
 
 ucx_mod.o                   : ucx_mod.F90                                    \
                               calc_met_mod.o          fast_jx_mod.o          \
-                              global_ch4_mod.o        hco_interface_mod.o
+                              global_ch4_mod.o        hco_interface_mod.o    \
+                              sect_aer_mod.o          sect_aer_data_mod.o
 
 uvalbedo_mod.o              : uvalbedo_mod.F90                               \
                               hco_interface_mod.o
