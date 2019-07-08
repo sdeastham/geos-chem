@@ -78,6 +78,9 @@
       ! HEMCO 
       USE EMISSIONS_MOD,           ONLY : EMISSIONS_FINAL
 
+      ! Sectional aerosols
+      Use Sect_Aer_Mod,            Only : Cleanup_Sect_Aer
+
 #if   defined( RRTMG )
       USE RRTMG_RAD_TRANSFER_MOD,  ONLY : Cleanup_RRTMG_Rad_Transfer
 #endif
@@ -381,6 +384,9 @@
          CALL GC_Error( ErrMsg, RC, ThisLoc )
          RETURN
       ENDIF
+
+      ! Clean up sectional aerosols
+      Call Cleanup_Sect_Aer(am_I_Root)
 
 #if   defined( TOMAS )
       CALL CLEANUP_TOMAS()
