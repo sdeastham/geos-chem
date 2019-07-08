@@ -52,6 +52,7 @@ SUBROUTINE CLEANUP( Input_Opt, State_Grid, ERROR, RC )
   USE UCX_MOD,                 ONLY : CLEANUP_UCX
   USE WETSCAV_MOD,             ONLY : CLEANUP_WETSCAV
   USE EMISSIONS_MOD,           ONLY : EMISSIONS_FINAL
+  USE Sect_Aer_Mod,            ONLY : Cleanup_Sect_Aer
   USE SFCVMR_MOD,              ONLY : FixSfcVmr_Final
 #ifdef BPCH_DIAG
   USE CMN_O3_Mod,              ONLY : Cleanup_CMN_O3
@@ -180,6 +181,9 @@ SUBROUTINE CLEANUP( Input_Opt, State_Grid, ERROR, RC )
      CALL GC_Error( ErrMsg, RC, ThisLoc )
      RETURN
   ENDIF
+
+  ! Clean up sectional aerosols
+  Call Cleanup_Sect_Aer(Input_Opt%am_I_Root)
 
   ! Cleanup TOMS module
   CALL CLEANUP_TOMS( RC )

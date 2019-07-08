@@ -1303,6 +1303,7 @@ CONTAINS
     USE State_Chm_Mod,  ONLY : Ind_
     USE State_Diag_Mod, ONLY : DgnState
     USE State_Grid_Mod, ONLY : GrdState
+    Use Sect_Aer_Mod,   Only : Init_Sect_Aer
 !
 ! !INPUT PARAMETERS:
 !
@@ -1373,6 +1374,16 @@ CONTAINS
        ! Trap potential errors
        IF ( RC /= GC_SUCCESS ) THEN
           ErrMsg = 'Error encountered in "Init_FJX"!'
+          CALL GC_Error( ErrMsg, RC, ThisLoc )
+          RETURN
+       ENDIF
+
+       ! Initialize sectional aerosol code
+       Call Init_Sect_Aer(am_I_Root, Input_Opt, State_Chm, State_Grid, RC)
+       
+       ! Trap potential errors
+       IF ( RC /= GC_SUCCESS ) THEN
+          ErrMsg = 'Error encountered in "Init_Sect_Aer"!'
           CALL GC_Error( ErrMsg, RC, ThisLoc )
           RETURN
        ENDIF
