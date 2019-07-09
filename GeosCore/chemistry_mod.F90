@@ -542,7 +542,8 @@ CONTAINS
              
              ! Recalculate PSC
              CALL Calc_Strat_Aer( am_I_Root,  Input_Opt, State_Chm,          &
-                                  State_Grid, State_Met, RC )
+                                  State_Grid, State_Met, State_Diag,         &
+                                  .True.,     RC                             )
 
              ! Trap potential errors
              IF ( RC /= GC_SUCCESS ) THEN

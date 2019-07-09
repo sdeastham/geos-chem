@@ -352,7 +352,8 @@ CONTAINS
 
           ! Calculate stratospheric aerosol properties (SDE 04/18/13)
           CALL CALC_STRAT_AER( am_I_Root,  Input_Opt, State_Chm,             &
-                               State_Grid, State_Met, RC                    )
+                               State_Grid, State_Met, State_Diag,            &
+                               .False.,    RC                                )
           
           ! Trap potential errors
           IF ( RC /= GC_SUCCESS ) THEN
