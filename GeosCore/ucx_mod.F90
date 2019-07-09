@@ -1585,6 +1585,8 @@ CONTAINS
     ! CALC_H2SO4_GAS begins here!
     !=================================================================
 
+    If (Input_Opt%LStratMicro) Return
+
     ! Copy fields from INPUT_OPT
     prtDebug = Input_Opt%LPRT .and. Input_Opt%amIRoot
 
@@ -1595,6 +1597,9 @@ CONTAINS
     Spc => State_Chm%Species
 
     IF (FIRST) THEN
+       If (prtDebug) Then
+          Write(*,*) ' --> First call of CALC_H2SO4_GAS'
+       End If
        FIRST = .FALSE.
        ! Calculate H2SO4 gas phase prefactors
        GF_INVT0 = 1.e+0_fp/GF_T0
@@ -1715,7 +1720,8 @@ CONTAINS
 !\\
 ! !INTERFACE:
 !
-  SUBROUTINE CALC_STRAT_AER( Input_Opt, State_Chm, State_Grid, State_Met, RC )
+  SUBROUTINE CALC_STRAT_AER( Input_Opt, State_Chm, State_Grid, State_Met,
+                             State_Diag, Run_Micro, RC )
 !
 ! !USES:
 !
@@ -1727,16 +1733,24 @@ CONTAINS
     USE State_Chm_Mod,      ONLY : ChmState
     USE State_Grid_Mod,     ONLY : GrdState
     USE State_Met_Mod,      ONLY : MetState
+    Use State_Diag_Mod,     Only : DgnState
+    Use Sect_Aer_Mod,       ONLY : Do_Sect_Aer, &
+                                   ID_Bins
+    Use Sect_Aer_Data_Mod,  ONLY : n_aer_bin,   &
+                                   aer_mass,    &
+                                   aer_molec
 !
 ! !INPUT PARAMETERS:
 !
     TYPE(OptInput), INTENT(IN)    :: Input_Opt   ! Input options
     TYPE(GrdState), INTENT(IN)    :: State_Grid  ! Grid State object
     TYPE(MetState), INTENT(IN)    :: State_Met   ! Meteorology State object
+    LOGICAL,        INTENT(IN)    :: Run_Micro   ! Run microphysics?
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
     TYPE(ChmState), INTENT(INOUT) :: State_Chm   ! Chemistry State object
+    TYPE(DgnState), INTENT(INOUT) :: State_Diag  ! Diagnostics State object
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -1834,6 +1848,7 @@ CONTAINS
     LOGICAL                 :: LHOMNUCNAT
     LOGICAL                 :: LSOLIDPSC
     LOGICAL                 :: LACTIVEH2O
+    LOGICAL                 :: LStratMicro
 
     ! Local variables for quantities from species database
     REAL(fp)                :: NIT_MW_G, HNO3_MW_G, H2O_MW_G
@@ -1854,6 +1869,7 @@ CONTAINS
     LHOMNUCNAT  = Input_Opt%LHOMNUCNAT
     LSOLIDPSC   = Input_Opt%LSOLIDPSC
     LACTIVEH2O  = Input_Opt%LACTIVEH2O
+    LStratMicro = Input_Opt%LStratMicro
 
     ! Do we have to print debug output?
     prtDebug = ( Input_Opt%LPRT .and. Input_Opt%amIRoot )

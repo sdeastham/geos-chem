@@ -300,9 +300,10 @@ CONTAINS
        IF ( Input_Opt%LUCX ) THEN
 
           ! Calculate stratospheric aerosol properties (SDE 04/18/13)
-          CALL CALC_STRAT_AER( Input_Opt, State_Chm, State_Grid, &
-                               State_Met, RC )
-
+          CALL CALC_STRAT_AER( Input_Opt, State_Chm,                         &
+                               State_Grid, State_Met, State_Diag,            &
+                               .False.,    RC                                )
+          
           ! Trap potential errors
           IF ( RC /= GC_SUCCESS ) THEN
              ErrMsg = 'Error encountered in "Calc_Strat_Aer"!'
