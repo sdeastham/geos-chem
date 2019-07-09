@@ -67,6 +67,7 @@ MODULE UCX_MOD
   PRIVATE :: MOLEC_SPEED
   PRIVATE :: NOXCOEFF_INIT
   PRIVATE :: GET_JJNOX
+  PRIVATE :: APPLY_STRAT_SETTLE
 !
 ! !REVISION HISTORY:
 !  26 Mar 2013 - S. D. Eastham - Initial version
@@ -1086,21 +1087,6 @@ CONTAINS
           RUNCALC = State_Met%InStratMeso(I,J,L)
 
           IF (RUNCALC) THEN
-             ! Need to translate for BC radii
-             IF ( State_Met%InChemGrid(I,J,L) ) THEN
-                RWET(IBC) = WERADIUS(I,J,L,2)*1.e-2_fp
-             ELSE
-                ! Use defaults, assume dry (!)
-                RWET(IBC) = RAA(IND999,29) * 1.0e-6_fp
-             ENDIF
-
-             ! Taken from aerosol_mod (MSDENS(2))
-             RHO(IBC) = BCDEN
-
-             ! Get aerosol properties
-             RWET(ILIQ) = RAD_AER(I,J,L,I_SLA)*1.e-2_fp
-             RHO(ILIQ)  = RHO_AER(I,J,L,I_SLA)
-
              ! Do we need to sediment NAT?
              IF (NDENS_AER(I,J,L,I_SPA).gt.TINY(0e+0_fp)) THEN
                 NATCOL = .TRUE.
@@ -1110,169 +1096,13 @@ CONTAINS
              ENDIF
           ENDIF
 
-          IF (.not.RUNCALC) THEN
-             VTS(L,:) = 0e+0_fp
+          IF (.not.(RUNCALC.and.NATCOL)) THEN
              VNAT(L) = 0e+0_fp
           ELSE
-             ! Calculate common variables first
-             sp_Num = P * 1.e+3_fp * AVO / (RSTARG * Temp)
-             sp_Lambda = 1.e+6_fp / ( SQRT(2e+0_fp) * sp_Num * PI &
-                         * (3.7e-10_fp)**2 )
-
-             ! Viscosity [Pa*s] of air as a function of temperature
-             VISC = 1.458e-6_fp * (Temp)**(1.5e+0_fp) &
-                    / ( Temp + 110.4e+0_fp )
-
-             DO IAERO=1,2
-                IF (RWET(IAERO).le.TINY(0e+0_fp)) THEN
-                   VTS(L,IAERO) = 0e+0_fp
-                ELSE
-                   ! Dp = particle diameter [um]
-                   DP = 2.e+0_fp * RWET(IAERO) * 1.e+6_fp
-
-                   ! PdP = P * dP [hPa * um]
-                   PDp     = P * Dp
-
-                   ! Constant
-                   CONST = 2.e+0_fp * RHO(IAERO) * RWET(IAERO)**2 &
-                           * g0 / 9.e+0_fp
-
-                   !=========================================================
-                   ! NOTE: Slip correction factor calculations following
-                   ! Seinfeld, pp464 which is thought to be more accurate
-                   ! but more computation required. (rjp, 1/24/02)
-                   !
-                   ! # air molecule number density
-                   ! num = P * 1d3 * 6.023d23 / (8.314 * Temp)
-                   !
-                   ! # gas mean free path
-                   ! lamda = 1.d6/( 1.41421 * num * 3.141592 * (3.7d-10)**2 )
-                   !
-                   ! # Slip correction
-                   ! Slip = 1. + 2. * lamda * (1.257 + 0.4 * exp( -1.1 * Dp
-                   !     &     / (2. * lamda))) / Dp
-                   !
-                   ! NOTE: Eq) 3.22 pp 50 in Hinds (Aerosol Technology)
-                   ! which produces slip correction factore with small error
-                   ! compared to the above with less computation.
-                   !========================================================= 
-
-                   ! Slip correction factor (as function of P*dp)
-                   ! Slip = 1.e+0_fp+(15.60e+0_fp + 7.0e+0_fp * &
-                   !           EXP(-0.059e+0_fp * PDp)) / PDp
-                   ! Reverting to Seinfeld and Pandis
-                   Slip = 1. + 2. * sp_Lambda * (1.257 + 0.4*exp(-1.1* &
-                          Dp / (2. * sp_Lambda))) / Dp
-
-                   ! Settling velocity [m/s]
-                   VTS(L,IAERO) = CONST * Slip / VISC
-                ENDIF ! RWET
-             ENDDO ! IAERO
-
-             ! Now solid PSC particles
-             IF (NATCOL) THEN
-                ! sp_Num: Air molecule#/m3
-                VNAT(L) = CALC_FALLVEL(RHO_AER(I,J,L,I_SPA), &
-                          RAD_AER(I,J,L,I_SPA),TEMP,P)
-                IF (VNAT(L).gt.VFALLMAX) VFALLMAX = VNAT(L)
-             ELSE
-                VNAT(L) = 0.e+0_fp
-             ENDIF
+             VNAT(L) = CALC_FALLVEL(RHO_AER(I,J,L,I_SPA), &
+                       RAD_AER(I,J,L,I_SPA),TEMP,P)
+             IF (VNAT(L).gt.VFALLMAX) VFALLMAX = VNAT(L)
           ENDIF ! RUNCALC
-       ENDDO
-
-       ! First apply simpler SLA sedimentation scheme
-       ! Handle model top condition
-       L    = State_Grid%NZ
-       DELZ = State_Met%BXHEIGHT(I,J,L)
-
-       DO IAERO=1,2
-          CONST_V(IAERO) = 1.e+0_fp / (1.e+0_fp + DTCHEM * VTS(L,IAERO) / DELZ)
-       ENDDO
-
-       ! Zero arrays
-       PHASEMASS(:,:) = 0e+0_fp
-
-       ! Only want to sediment fraction of species currently
-       ! in the aerosol
-       DO K = 1,7
-          ! Only process transported species
-          IDTCURRENT = AERFRACIND(K)
-          IF (IDTCURRENT.ne.0) THEN
-             ! Calculate local phase partitioning
-             ! Total upper gridbox mass
-             PHASEMASS(3,2) = Spc(I,J,L,IDTCURRENT)
-             ! Aerosol-phase upper gridbox mass
-             PHASEMASS(2,2) = AERFRAC(I,J,L,K)*PHASEMASS(3,2)
-             ! Gas-phase upper gridbox mass
-             PHASEMASS(1,2) = PHASEMASS(3,2) - PHASEMASS(2,2)
-
-             ! Calculate total sedimented mass
-             SEDMASS = PHASEMASS(2,2) * (1.e+0_fp-CONST_V(ILIQ))
-
-             ! Remove from upper gridbox
-             PHASEMASS(2,2) = PHASEMASS(2,2) - SEDMASS
-             PHASEMASS(3,2) = PHASEMASS(1,2) + PHASEMASS(2,2)
-
-             ! Recalculate phase fractions
-             IF (PHASEMASS(3,2).gt.TINY(1e+0_fp)) THEN
-                AERFRAC(I,J,L,K) = PHASEMASS(2,2)/PHASEMASS(3,2)
-             ELSE
-                AERFRAC(I,J,L,K) = 0e+0_fp
-             ENDIF
-
-             ! Store result
-             Spc(I,J,L,IDTCURRENT) = PHASEMASS(3,2)
-          ENDIF
-       ENDDO
-       Spc(I,J,L,id_BCPI)= Spc(I,J,L,id_BCPI)* CONST_V(IBC)
-
-       DO L = State_Grid%NZ-1,1,-1
-          IF ( State_Met%InTroposphere(I,J,L+1) ) CYCLE
-          DELZ  = State_Met%BXHEIGHT(I,J,L)
-          DELZ1 = State_Met%BXHEIGHT(I,J,L+1)
-
-          DO K=1,7
-             IDTCURRENT = AERFRACIND(K)
-             IF (IDTCURRENT.ne.0) THEN
-                ! Total upper gridbox mass
-                PHASEMASS(3,2) = Spc(I,J,L+1,IDTCURRENT)
-                ! Aerosol-phase upper gridbox mass
-                PHASEMASS(2,2) = AERFRAC(I,J,L+1,K)*PHASEMASS(3,2)
-                ! Gas-phase upper gridbox mass
-                PHASEMASS(1,2) = PHASEMASS(3,2) - PHASEMASS(2,2)
-
-                ! Total lower gridbox mass
-                PHASEMASS(3,1) = Spc(I,J,L,IDTCURRENT)
-                ! Aerosol-phase lower gridbox mass
-                PHASEMASS(2,1) = AERFRAC(I,J,L,K)*PHASEMASS(3,1)
-                ! Gas-phase lower gridbox mass
-                PHASEMASS(1,1) = PHASEMASS(3,1) - PHASEMASS(2,1)
-
-                ! New lower gridbox mass
-                PHASEMASS(2,1) = 1.e+0_fp/(1.e+0_fp+DTCHEM &
-                                 * VTS(L,ILIQ) / DELZ) &
-                                 * (PHASEMASS(2,1)+DTCHEM*VTS(L+1,ILIQ)/DELZ1 &
-                                 * PHASEMASS(2,2))
-
-                ! Calculate new total mass in lower gridbox
-                PHASEMASS(3,1) = PHASEMASS(2,1) + PHASEMASS(1,1)
-
-                ! Recalculate phase fraction
-                IF (PHASEMASS(3,1).gt.TINY(1e+0_fp)) THEN
-                   AERFRAC(I,J,L,K) = PHASEMASS(2,1)/PHASEMASS(3,1)
-                ELSE
-                   AERFRAC(I,J,L,K) = 0e+0_fp
-                ENDIF
-
-                ! Store result
-                Spc(I,J,L,IDTCURRENT) = PHASEMASS(3,1)
-             ENDIF
-          ENDDO
-          Spc(I,J,L,id_BCPI) = 1.e+0_fp/(1.e+0_fp+DTCHEM &
-                               * VTS(L,IBC) / DELZ) &
-                               * (Spc(I,J,L,id_BCPI)+DTCHEM*VTS(L+1,IBC)/DELZ1 &
-                               * Spc(I,J,L+1,id_BCPI))
        ENDDO
 
        ! Now perform trapezoidal scheme for particulates
@@ -1511,12 +1341,238 @@ CONTAINS
     ENDDO
     !$OMP END PARALLEL DO
 
+    ! If using "advanced" microphysics, only settle BC and OC
+    ! Sulfates were settled elsewhere
+    If (Input_Opt%LStratMicro) Then
+       RC = 0
+       !$OMP PARALLEL DO        &
+       !$OMP DEFAULT( SHARED  ) 
+       !$OMP PRIVATE( J,            I,            L,          TEMP       ) &
+       !$OMP PRIVATE( sp_Num,       sp_Lambda,    VISC,       RC_Local   ) &
+       !$OMP PRIVATE( rwet_vec,     rho_vec,      lambda_vec, visc_vec   ) &
+       !$OMP PRIVATE( PMid_Vec,     DZ_Vec,       InTrop_Vec, Spc_vec    ) &
+       !$OMP PRIVATE( P                                                  ) 
+       Do J=1,State_Grid%NY
+       Do I=1,State_Grid%NX
+          ! Calculate prefactors
+          DZ_Vec     = State_Met%BxHeight(I,J,:)
+          InTrop_Vec = State_Met%InTroposphere(I,J,:)
+          PMid_Vec   = State_Met%PMid(I,J,:)
+          DO L = 1, State_Grid%NZ
+             ! Temperature [K]
+             TEMP    = State_Met%T(I,J,L)
+             ! Pressure in kPa
+             P       = PMid_Vec(L) * 0.1e+0_fp
+             IF (State_Met%InStratMeso(I,J,L)) THEN
+                ! Calculate common variables first
+                sp_Num = P * 1.e+3_fp * AVO / (RSTARG * Temp)
+                sp_Lambda = 1.e+6_fp / ( SQRT(2e+0_fp) * sp_Num * PI &
+                            * (3.7e-10_fp)**2 )
+                ! Viscosity [Pa*s] of air as a function of temperature 
+                VISC = 1.458e-6_fp * (Temp)**(1.5e+0_fp) &
+                      / ( Temp + 110.4e+0_fp )
+             Else
+                ! This is used to indicate that no settling is done
+                sp_Lambda = 0.0e+0_fp
+                Visc = 0.0e+0_fp
+             End If
+             ! Store results
+             Lambda_Vec(L) = sp_Lambda
+             Visc_Vec(L) = Visc
+          End Do
+
+          ! Settle BCPI
+          Spc_vec => Spc(I,J,:,ID_BCPI)
+          Do L=1,State_Grid%NZ
+             ! Need to translate for BC radii
+             IF ( State_Met%InChemGrid(I,J,L) ) THEN
+                rwet_vec(L) = WERADIUS(I,J,L,2)*1.e-2_fp
+             ELSE
+                ! Use defaults, assume dry (!)
+                rwet_vec(L) = RAA(IND999,29) * 1.0e-6_fp
+             ENDIF
+          End Do
+          rho_vec(:) = State_Chm%SpcData(id_BCPI)%Info%Density
+          Call Apply_Strat_Settle(Lambda_Vec,Visc_Vec,             &
+                                  rwet_vec, rho_vec,               &
+                                  Spc_vec, PMid_vec,               &
+                                  DZ_Vec, InTrop_Vec,              &
+                                  real(dtchem,fp), Input_Opt%LPRT, &
+                                  State_Grid%NZ, RC_Local)
+          If (RC_Local.ne.0) RC = RC_Local
+
+          ! Settle OCPI
+          Spc_vec => Spc(I,J,:,ID_OCPI)
+          Do L=1,State_Grid%NZ
+             ! Need to translate for OC radii
+             IF ( State_Met%InChemGrid(I,J,L) ) THEN
+                rwet_vec(L) = WERADIUS(I,J,L,3)*1.e-2_fp
+             ELSE
+                ! Use defaults, assume dry (!)
+                rwet_vec(L) = RAA(IND999,36) * 1.0e-6_fp
+             ENDIF
+          End Do
+          rho_vec(:) = State_Chm%SpcData(id_OCPI)%Info%Density
+          Call Apply_Strat_Settle(Lambda_Vec,Visc_Vec,             &
+                                  rwet_vec, rho_vec,               &
+                                  Spc_vec, PMid_vec,               &
+                                  DZ_Vec, InTrop_Vec,              &
+                                  real(dtchem,fp), Input_Opt%LPRT, &
+                                  State_Grid%NZ, RC_Local)
+          If (RC_Local.ne.0) RC = RC_Local
+
+          ! Nullify
+          Spc_Vec => Null()
+       End Do
+       End Do
+       !$OMP END PARALLEL DO
+    End If
+
+    If (RC.ne.0) Write(*,*) 'Failure during simple BC/OC settling'
+
     ! Free pointers
     Spc       => NULL()
     STATE_PSC => NULL()
     WERADIUS  => NULL()
 
   END SUBROUTINE SETTLE_STRAT_AER
+!EOC
+!------------------------------------------------------------------------------
+!               MIT Laboratory for Aviation and the Environment               !
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: apply_strat_settle
+!
+! !DESCRIPTION: Subroutine APPLY\_STRAT\_SETTLE settles aerosols in the 
+! stratosphere.
+!\\
+!\\
+! !INTERFACE:
+!
+!
+      SUBROUTINE Apply_Strat_Settle( lambda,   visc,   rwet,       &
+                                     rho,      spc,    PMid_hPa,   &
+                                     BxHeight, InTrop, dt_sec,     &
+                                     LPrt,     NZ,     RC          )
+!
+! !USES:
+!
+      USE ERROR_MOD,      ONLY : Debug_Msg
+      USE State_Met_Mod,  ONLY : MetState
+!
+! !INPUT VARIABLES:
+!
+      Integer,        Intent(in)    :: NZ
+      Real(fp),       Intent(in)    :: lambda(NZ)           ! Lambda in each layer (???)
+      Real(fp),       Intent(in)    :: visc(NZ)             ! Viscosity in each layer (???)
+      Real(fp),       Intent(in)    :: rwet(NZ)             ! Aerosol wet radius (m)
+      Real(fp),       Intent(in)    :: rho(NZ)              ! Aerosol mass density (g/cm3?)
+      Real(fp),       Intent(in)    :: PMid_hPa(NZ)         ! Mid-point pressure (hPa)
+      Real(fp),       Intent(in)    :: BxHeight(NZ)         ! Box height (m)
+      Logical,        Intent(in)    :: InTrop(NZ)           ! Are we in the trop? (T/F)
+      Real(fp),       Intent(in)    :: dt_sec               ! Timestep (seconds)
+      Logical,        Intent(in)    :: LPrt                 ! Print debug info?
+!
+! !OUTPUT VARIABLES:
+!
+      Real(fp),       Intent(inout) :: spc(NZ)              ! Aerosol concentrations (v/v)
+      Integer,        Intent(out)   :: RC                   ! Return code (non-zero for error)
+!
+! !REVISION HISTORY: 
+!  05 Dec 2018 - S.D.Eastham - Initial version
+!EOP
+!------------------------------------------------------------------------------
+!BOC
+!
+! !LOCAL VARIABLES:
+!
+      Real(fp)   :: sp_Lambda, DP, PDp, Slip, Const
+      Real(fp)   :: P, DelZ, DelZ1
+      Integer    :: L
+      Real(fp)   :: VTS(NZ)    ! Settling velocity (m/s)
+
+      !=================================================================
+      ! APPLY_STRAT_SETTLE begins here!
+      !=================================================================
+
+      ! First, calculate settling velocities
+      Do L=1,NZ
+         sp_Lambda = Lambda(L)
+         IF ((RWet(L).le.TINY(0e+0_fp)).or. &
+             (sp_Lambda.le.TINY(0e+0_fp))) THEN
+            VTS(L) = 0e+0_fp
+         ELSE
+            !P = PMid_hPa(L)
+            ! Dp = particle diameter [um]
+            DP = 2.e+0_fp * RWet(L) * 1.e+6_fp        
+
+            !! PdP = P * dP [hPa * um]
+            !PDp     = P * Dp
+
+            ! Constant
+            CONST = 2.e+0_fp * RHO(L) * RWET(L)**2  &
+                   * g0 / 9.e+0_fp
+
+            !=========================================================
+            ! NOTE: Slip correction factor calculations following 
+            ! Seinfeld, pp464 which is thought to be more accurate 
+            ! but more computation required. (rjp, 1/24/02)
+            !
+            ! # air molecule number density
+            ! num = P * 1d3 * 6.023d23 / (8.314 * Temp) 
+            !
+            ! # gas mean free path
+            ! lamda = 1.d6/( 1.41421 * num * 3.141592 * (3.7d-10)**2 ) 
+            !
+            ! # Slip correction
+            ! Slip = 1. + 2. * lamda * (1.257 + 0.4 * exp( -1.1 * Dp  
+            !     &     / (2. * lamda))) / Dp
+            !
+            ! NOTE: Eq) 3.22 pp 50 in Hinds (Aerosol Technology)
+            ! which produces slip correction factore with small error
+            ! compared to the above with less computation.
+            !========================================================= 
+          
+            ! Slip correction factor (as function of P*dp)
+            ! Slip = 1.e+0_fp+(15.60e+0_fp + 7.0e+0_fp * &
+            !           EXP(-0.059e+0_fp * PDp)) / PDp
+            ! Reverting to Seinfeld and Pandis
+            Slip = 1. + 2. * sp_Lambda * (1.257 + 0.4*exp(-1.1* &
+                  Dp / (2. * sp_Lambda))) / Dp
+   
+            ! Settling velocity [m/s]
+            VTS(L) = CONST * Slip / VISC(L) 
+         ENDIF ! Non-zero speed
+      End Do
+
+      ! Now, apply them using backwards Euler integration
+      ! Handle model top condition
+      ! Material settling out of the top box 
+      L    = NZ
+      DELZ = BxHeight(L)
+      CONST = 1.e+0_fp / (1.e+0_fp + dt_sec &
+                         * VTS(L) / DELZ)
+      Spc(L)= Spc(L) * CONST 
+
+      ! Handle remaining boxes
+      DO L = NZ-1,1,-1
+         IF (L.lt.(NZ-1)) Then
+            If (InTrop(L+2)) CYCLE
+         End If
+         DELZ  = BXHEIGHT(L)
+         DELZ1 = BXHEIGHT(L+1)
+
+         spc(L) = 1.e+0_fp/(1.e+0_fp+dt_sec       &
+                  * VTS(L) / DELZ)                &
+                  * (Spc(L)+dt_sec*VTS(L+1)/DELZ1 &
+                  * Spc(L+1))
+      ENDDO
+
+      ! Success
+      RC = 0
+
+      End Subroutine Apply_Strat_Settle
 !EOC
 !------------------------------------------------------------------------------
 !               MIT Laboratory for Aviation and the Environment               !
@@ -1585,10 +1641,33 @@ CONTAINS
     ! CALC_H2SO4_GAS begins here!
     !=================================================================
 
-    If (Input_Opt%LStratMicro) Return
-
     ! Copy fields from INPUT_OPT
     prtDebug = Input_Opt%LPRT .and. Input_Opt%amIRoot
+
+    ! If using sectional microphysics - this is already done. The SO4
+    ! tracer now only represents tropospheric aerosol or H2SO4 gas
+    If (Input_Opt%LStratMicro) Then
+       !$OMP PARALLEL DO &
+       !$OMP DEFAULT( SHARED  ) &
+       !$OMP PRIVATE( I, J, L ) &
+       !$OMP SCHEDULE( DYNAMIC )
+       DO L = 1, State_Grid%NZ
+       DO J = 1, State_Grid%NY
+       DO I = 1, State_Grid%NX
+          If (State_Met%InTroposphere(I,J,L)) Then
+             ! Don't interfere with tropospheric aerosol
+             AerFrac(I,J,L,1) = 1.0e+0_fp
+          Else
+             ! All "SO4" tracer is gas in the stratosphere
+             AerFrac(I,J,L,1) = 0.0e+0_fp
+          End If
+       END DO
+       END DO
+       END DO
+       !$OMP END PARALLEL DO
+       IF ( prtDebug ) CALL DEBUG_MSG( '### UCX: H2SO4g tagged' )
+       Return
+    End If
 
     ! Copy fields from species database
     SO4_MW_G = State_Chm%SpcData(id_SO4)%Info%emMW_g ! g/mol
@@ -1857,6 +1936,17 @@ CONTAINS
     REAL(fp), POINTER       :: Spc (:,:,:,:)
     REAL(fp), POINTER       :: KHETI_SLA(:,:,:,:)
     REAL(f4), POINTER       :: STATE_PSC(:,:,:)
+    REAL(fp), POINTER       :: aDen(:,:,:,:)
+    REAL(fp), POINTER       :: aWP(:,:,:,:)
+
+    ! For sectional aerosols
+    Integer                 :: I_Bin
+    Real(fp)                :: Gamma_Bin(11)
+    Real(fp)                :: NDENS_BIN, SAD_BIN,    VOL_BIN  
+    Real(fp)                :: VV_BIN
+    Real(fp)                :: RHO_BIN,   RAD_BIN,    MASS_BIN 
+    Real(fp)                :: MASS_WET,  VOL_WET,    RAD_WET  
+    Real(fp)                :: MASS_SUM,  VOL_SUM,    RAD_SUM  
 
     !=================================================================
     ! CALC_STRAT_AER begins here!
@@ -1878,6 +1968,20 @@ CONTAINS
     NIT_MW_G  = State_Chm%SpcData(id_NIT)%Info%emMW_g   ! g/mol
     HNO3_MW_G = State_Chm%SpcData(id_HNO3)%Info%emMW_g  ! g/mol
     H2O_MW_G  = State_Chm%SpcData(id_H2O)%Info%emMW_g   ! g/mol
+
+    ! If we are using sectional aerosols in the stratosphere, run that
+    If (LStratMicro) Then
+       Call Do_Sect_Aer(am_I_Root, Input_Opt, State_Met, State_Chm, &
+                        State_Diag, State_Grid, Run_Micro, RC)
+       If (RC.ne.0) Then
+          Call Error_Stop('Failure in sectional aerosol calculations', &
+                          'UCX_mod.F90')
+          Return
+       End If
+       ! Get pointers to aerosol properties
+       aWP  => State_Chm%Strat_WPcg
+       aDen => State_Chm%Strat_Den
+    End If
 
     ! Initialize GEOS-Chem species array [kg]
     Spc => State_Chm%Species
@@ -1923,6 +2027,11 @@ CONTAINS
     !$OMP PRIVATE( HOCl_BOX_L,   H2SO4_BOX_G,        HBr_BOX_G     ) &
     !$OMP PRIVATE( HBr_BOX_L,    HOBr_BOX_G,         HOBr_BOX_L    ) &
     !$OMP PRIVATE( H2SO4_BOX_L,  KHET_COMMON,        KHET_SPECIFIC ) &
+    !$OMP PRIVATE( VV_BIN,       GAMMA_BIN,          I_BIN         ) &
+    !$OMP PRIVATE( RHO_BIN,      RAD_BIN,            MASS_BIN      ) &
+    !$OMP PRIVATE( MASS_WET,     VOL_WET,            RAD_WET       ) &
+    !$OMP PRIVATE( MASS_SUM,     VOL_SUM,            RAD_SUM       ) &
+    !$OMP PRIVATE( NDENS_BIN,    SAD_BIN,            VOL_BIN,      ) &
     !$OMP PRIVATE( VOL_TOT,      BOX_LAT                           ) &
     !$OMP SCHEDULE( DYNAMIC )
     DO L = 1, State_Grid%NZ
@@ -2224,6 +2333,78 @@ CONTAINS
           GAMMA_BOX(9)  = 0.0e+0_fp
           GAMMA_BOX(10) = 0.2e+0_fp
           GAMMA_BOX(11) = 0.0e+0_fp
+       ELSEIF (LStratMicro) Then
+          ! Sum target quantities over all bins
+          GAMMA_BOX(:)  = 0.0e+0_fp
+          RHO_AER_BOX   = 0.0e+0_fp
+          RAD_AER_BOX   = 0.0e+0_fp
+          SAD_AER_BOX   = 0.0e+0_fp
+          KG_AER_BOX    = 0.0e+0_fp
+          NDENS_AER_BOX = 0.0e+0_fp
+          H2SO4_BOX_L   = 0.0e+0_fp
+          H2SO4SUM      = Spc(I,J,L,id_SO4) * INVAIR / & 
+                          State_Chm%SpcData(id_SO4)%Info%emMW_g
+          H2SO4_BOX_G   = H2SO4SUM
+          ! Accumulators
+          MASS_WET      = 0.0e+0_fp
+          VOL_WET       = 0.0e+0_fp
+          RAD_WET       = 0.0e+0_fp
+          MASS_SUM      = 0.0e+0_fp
+          VOL_SUM       = 0.0e+0_fp
+          RAD_SUM       = 0.0e+0_fp
+          Do I_Bin=1, N_Aer_Bin
+            ! Aerosol mass (dry)
+            Mass_Bin   = Spc(I,J,L,id_Bins(I_Bin,1))
+            KG_AER_BOX = KG_AER_BOX + Mass_Bin
+            ! Aerosol mass (kg) (wet)
+            Mass_Wet   = 100.0e+0_fp*(Mass_Bin/aWP(I,J,L,I_Bin))
+            Mass_Sum   = Mass_Sum + Mass_Wet
+            ! Aerosol volume (m3) (wet)
+            Vol_Wet    = Mass_Wet/(aDen(I,J,L,I_Bin)*1.0e+3_fp)
+            Vol_Sum    = Vol_Sum + Vol_Wet
+            ! VMR of SO4 in this bin
+            VV_Bin     = Mass_Bin * InvAir / SO4_MW_g
+            H2SO4_BOX_L = H2SO4_BOX_L + VV_BIN
+            ! Number of droplets in this size range (#/m3)
+            NDens_Bin = 1.0e3*Spc(I,J,L,ID_Bins(I_Bin,1))/ &
+                        Aer_Mass(I_Bin)/State_Met%AirVol(I,J,L)
+            NDens_Aer_Box = NDens_Aer_Box + NDens_Bin
+            ! RHO_BIN is in g/cm3, RHO_AER_BOX is in kg/m3
+            Rho_Bin = aDen(I,J,L,I_Bin) ! g/cm3
+            ! Volume of 1 particle in cm3
+            Vol_Bin = Aer_Mass(I_Bin)/aWP(I,J,L,I_Bin) &
+                      /.01/aDen(I,J,L,I_Bin)
+            ! Radius (wet) (cm)
+            Rad_Bin = ((Vol_Bin*3./4./PI)**(1./3.))
+            ! SAD of droplets in this size range (cm2/cm3)
+            SAD_Bin = (RAD_BIN*RAD_BIN*4.0*PI)* &
+                       NDENS_BIN*1.0e-6_fp
+            SAD_Aer_Box = SAD_Aer_Box + SAD_Bin
+            ! Get weighted mean radius (m)
+            Rad_Wet = Rad_Bin * 1.0e-2_fp ! m
+            Rad_Sum = Rad_Sum + (Rad_Wet * SAD_Bin)
+            ! NOTE - Should we be depleting species involved in
+            ! bulk uptake?
+            Call Calc_SLA_Gamma(DENAIR*1.0e-6_fp,      &
+                TCenter,PCenter,0.01*aWP(I,J,L,I_Bin), &
+                H2OSum,HClSum,HBrSum,HOBrSum,          &
+                ClNO3Sum,BrNO3Sum,Rho_Bin,             &
+                Rad_Bin,Gamma_Bin)
+            Gamma_Box = Gamma_Box + (Gamma_Bin*SAD_Bin)
+          End Do
+          ! Mass-weighted mean (wet mass) for box density (kg/m3)
+          Rho_Aer_Box = Mass_Sum/Vol_Sum
+          ! Total water taken up by aerosol (v/v)
+          H2O_Box_L = (Mass_Sum - KG_Aer_Box) * 
+                      InvAir / H2O_MW_g
+          ! Area-weighted mean gamma and area-weighted mean radius (m)
+          If (SAD_Aer_Box .gt. Tiny(1.0e+0_fp)) Then
+          Else
+             ! No aerosol - zero out the rates
+             Gamma_Box = 0.0e+0_fp
+             ! Set radius to something reasonable (0.1 um)
+             Rad_Aer_Box = 0.1e-6_fp
+          End If
        ELSEIF (H2SO4_BOX_L.lt.1e-15_fp) THEN
           ! No aerosol to speak of
           DO K=1,11
@@ -2298,7 +2479,9 @@ CONTAINS
        ! Liquid H2O is removed from the sum, then it is assumed
        ! that the pre-calculated solid H2O is taken out of this
        ! liquid total
-       H2O_BOX_L = (98.09e+0_fp/18.02e+0_fp)*H2SO4_BOX_L * (W_H2O/W_H2SO4)
+       If (.not.LStratMicro) Then
+          H2O_BOX_L = (98.09e+0_fp/18.02e+0_fp)*H2SO4_BOX_L * (W_H2O/W_H2SO4)
+       End If
        H2O_BOX_L = MAX(0e+0_fp,MIN(H2O_BOX_L-H2O_BOX_S,H2OSUM))
        H2O_BOX_G = MAX(0e+0_fp,H2O_BOX_G-(H2O_BOX_L+H2O_BOX_S))
 
@@ -2378,6 +2561,7 @@ CONTAINS
 
     ! Free pointers
     NULLIFY( Spc, STATE_PSC, KHETI_SLA )
+    If (Input_Opt%LStratMicro) Nullify( aWP, aDen )
 
   END SUBROUTINE CALC_STRAT_AER
 !EOC
@@ -4543,18 +4727,26 @@ CONTAINS
        UCX_LATS(N+1) = UCX_LATS(N) + 9.5e+0_fp
     ENDDO
 
-    ! Calculate conversion factors for SLA
-    ! Factor to convert volume (m3 SLA/m3 air) to
-    ! surface area density (cm2 SLA/cm3 air)
-    SLA_VA = (8.406e-8_fp)*(10.e+0_fp**(12.e+0_fp*0.751e+0_fp))
+    ! For sectional aerosols, just set these to 1 so that
+    ! they have no effect
+    If (Input_Opt%LStratMicro) Then
+       SLA_VA = 1.0e+0_fp
+       SLA_RR = 1.0e+0_fp
+       SLA_VR = 1.0e+0_fp
+    Else
+       !Calculate conversion factors for SLA
+       ! Factor to convert volume (m3 SLA/m3 air) to
+       ! surface area density (cm2 SLA/cm3 air)
+       SLA_VA = (8.406e-8_fp)*(10.e+0_fp**(12.e+0_fp*0.751e+0_fp))
 
-    ! Factor to convert effective radius to
-    ! liquid radius (unitless)
-    SLA_RR = EXP(-0.173e+0_fp)
+       ! Factor to convert effective radius to
+       ! liquid radius (unitless)
+       SLA_RR = EXP(-0.173e+0_fp)
 
-    ! Factor to convert volume (m3/m3) to effective
-    ! radius (m)
-    SLA_VR = (0.357e-6_fp)*(10.e+0_fp**(12.e+0_fp*0.249))
+       ! Factor to convert volume (m3/m3) to effective
+       ! radius (m)
+       SLA_VR = (0.357e-6_fp)*(10.e+0_fp**(12.e+0_fp*0.249))
+    End If
 
     ! Initialize NOx coefficient arrays
     ALLOCATE( NOX_O( State_Grid%NX, State_Grid%NY, State_Grid%NZ, 2 ), &
