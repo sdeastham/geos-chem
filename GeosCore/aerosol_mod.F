@@ -323,6 +323,7 @@
       LOGICAL             :: LSULF
       LOGICAL             :: LPRT
       LOGICAL             :: LUCX
+      LOGICAL             :: LUCXMINI
       LOGICAL             :: IS_OCPO,  IS_OCPI,  IS_BC
       LOGICAL             :: IS_SO4,   IS_NH4,   IS_NIT
       LOGICAL             :: IS_SAL,   IS_DST
@@ -367,6 +368,7 @@
       LSULF   = Input_Opt%LSULF
       LPRT    = Input_Opt%LPRT
       LUCX    = Input_Opt%LUCX
+      LUCXMINI= Input_Opt%LUCXMINI
 
       ! Do we have to print debug output?
       prtDebug   = ( LPRT .and. am_I_Root )
@@ -1361,7 +1363,7 @@
       LOGICAL             :: LSTRATOD
       LOGICAL             :: LRAD
       LOGICAL             :: LBCAE  ! (xnw, 8/24/15)
-      LOGICAL             :: LUCX
+      LOGICAL             :: LUCX, LUCXMINI
       LOGICAL             :: IS_POA, IS_OCPI
       REAL(fp)            :: GF_RH
       REAL(fp)            :: BCAE_1, BCAE_2
@@ -1409,6 +1411,7 @@
       BCAE_1               = Input_Opt%BCAE_1
       BCAE_2               = Input_Opt%BCAE_2
       LUCX                 = Input_Opt%LUCX
+      LUCXMINI             = Input_Opt%LUCXMINI
 
       ! Define logical flags
       IS_OCPI              = ( id_OCPI > 0 )
@@ -1592,7 +1595,11 @@
 !$OMP END PARALLEL DO
       ENDIF 
 
-      IF ( LUCX ) THEN
+      IF ( LUCXMINI ) THEN
+         ! Zero out when using fast stratosphere
+         WAERSL(:,:,:,NRHAER+1) = 0.0e+0_fp
+         WAERSL(:,:,:,NRHAER+2) = 0.0e+0_fp
+      ELSEIF ( LUCX ) THEN
          ! For UCX-based mechanisms transfer stratospheric aerosol data
          ! SDE 04/17/13 
          WAERSL(:,:,:,NRHAER+1) = SLA
@@ -2139,7 +2146,19 @@
       !==============================================================
       ! Account for stratospheric aerosols in UCX mechanisms (SDE 04/17/13)
       !==============================================================
-      IF ( LUCX ) THEN
+      IF ( LUCXMINI ) THEN
+         ! Set all stratospheric aerosol quantities to "zero"
+         Do IStrat = 1,NStratAer
+            N = NRHAer + IStrat
+            ! Set surface area to zero
+            TAREA(:,:,:,NDUST+N)  = 0.0e+0_fp
+            WTAREA(:,:,:,NDUST+N) = 0.0e+0_fp
+            
+            ! Store default radius (cm)
+            ERADIUS(:,:,:,NDUST+N)  = 0.5e-4_fp
+            WERADIUS(:,:,:,NDUST+N) = 0.5e-4_fp
+         End Do
+      ELSEIF ( LUCX ) THEN
 
          ! Loop over stratospheric aerosols
          DO ISTRAT = 1,NSTRATAER
