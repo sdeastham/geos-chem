@@ -2691,6 +2691,7 @@
       LOGICAL                 :: LHOMNUCNAT
       LOGICAL                 :: LSOLIDPSC
       LOGICAL                 :: LACTIVEH2O
+      LOGICAL                 :: LUCXMini
 
       ! Local variables for quantities from species database
       REAL(fp)                :: NIT_MW_G, HNO3_MW_G, H2O_MW_G
@@ -2712,6 +2713,7 @@
       LHOMNUCNAT  = Input_Opt%LHOMNUCNAT
       LSOLIDPSC   = Input_Opt%LSOLIDPSC
       LACTIVEH2O  = Input_Opt%LACTIVEH2O
+      LUCXMini    = Input_Opt%LUCXMini  
 
       ! Copy fields from species database
       NIT_MW_G  = State_Chm%SpcData(id_NIT)%Info%emMW_g   ! g/mol
@@ -2736,6 +2738,34 @@
 
       ! Partition H2SO4 before proceeding
       CALL CALC_H2SO4_GAS( Input_Opt, State_Chm, State_Grid, State_Met )
+
+      ! If using UCX-mini, skip stratospheric aerosols
+      If (LUCXMini) Then
+         ! Store standard values
+         RAD_AER  (:,:,:,:) =    0.5e-4_fp ! 0.5 um, in cm
+         RHO_AER  (:,:,:,:) = 1000.0e+0_fp ! kg/m3
+         KG_AER   (:,:,:,:) =    0.0e+0_fp ! kg 
+         NDENS_AER(:,:,:,:) =    0.5e+0_fp ! #/m3
+         SAD_AER  (:,:,:,:) =    0.0e+0_fp ! cm2/cm3
+
+         ! Now the secondary fields
+         State_PSC(:,:,:  ) =    0
+         KHetI_SLA(:,:,:,:) =    0.0e+0_fp ! Rates
+         ! Keep sulfate partitioned
+         Do N=2,7
+            AERFRAC  (:,:,:,N) = 0.0e+0_fp ! Phases
+         End Do
+
+         ! Free pointers
+         NULLIFY( Spc, STATE_PSC, KHETI_SLA )
+ 
+         If ( prtDebug ) Then
+            Call Debug_Msg( '### UCX: skipped CALC_STRAT_AER' )
+         End If
+
+         ! Skip the rest
+         Return
+      End If
 
       ! Loop over latitude boxes first
 !$OMP PARALLEL DO
