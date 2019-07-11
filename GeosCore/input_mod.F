@@ -2988,6 +2988,14 @@
       ENDIF
       READ( SUBSTRS(1:N), * ) Input_Opt%LUCX
 
+      ! Run UCX-mini?
+      CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LUCXMINI', RC )
+      IF ( RC /= GC_SUCCESS ) THEN
+         CALL GC_Error( ErrMsg, RC, ThisLoc )
+         RETURN
+      ENDIF
+      READ( SUBSTRS(1:N), * ) Input_Opt%LUCXMINI
+
       ! Turn on online stratospheric H2O?
       CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LACTIVEH2O', RC )
       IF ( RC /= GC_SUCCESS ) THEN
@@ -3119,6 +3127,8 @@
      &                        Input_Opt%LLINOZ
          WRITE( 6, 100     ) 'Enable UCX?                 : ',
      &                        Input_Opt%LUCX
+         WRITE( 6, 100     ) ' => Simplified stratosphere?: ',
+     &                        Input_Opt%LUCXMINI
          WRITE( 6, 100     ) 'Online strat. H2O?          : ',
      &                        Input_Opt%LACTIVEH2O
          WRITE( 6, 100     ) 'Online ozone for FAST-JX?   : ',
