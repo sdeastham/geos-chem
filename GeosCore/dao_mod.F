@@ -788,7 +788,7 @@
 
          ELSE
 
-            IF ( Input_Opt%LUCX ) THEN
+            IF ( Input_Opt%LUCX .and. (.not. Input_Opt%LUCXMINI) ) THEN
 
                ! UCX mechanisms: Chemistry grid goes up to stratopause
                State_Met%InChemGrid(I,J,L) =

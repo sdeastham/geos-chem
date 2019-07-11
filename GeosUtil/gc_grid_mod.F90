@@ -145,7 +145,7 @@ CONTAINS
     ENDIF
 
     ! Set maximum number of levels in the chemistry grid
-    IF ( Input_Opt%LUCX ) THEN
+    IF ( Input_Opt%LUCX .and. (.not.Input_Opt%LUCXMINI) ) THEN
        State_Grid%MaxChemLev  = State_Grid%MaxStratLev
     ELSE
        State_Grid%MaxChemLev  = State_Grid%MaxTropLev
