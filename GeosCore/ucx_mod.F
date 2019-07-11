@@ -2752,8 +2752,8 @@
          State_PSC(:,:,:  ) =    0
          KHetI_SLA(:,:,:,:) =    0.0e+0_fp ! Rates
          ! Keep sulfate partitioned
-         Do N=2,7
-            AERFRAC  (:,:,:,N) = 0.0e+0_fp ! Phases
+         Do K=2,7
+            AERFRAC  (:,:,:,K) = 0.0e+0_fp ! Phases
          End Do
 
          ! Free pointers
