@@ -596,7 +596,7 @@
 !\\
 ! !INTERFACE:
 !
-      SUBROUTINE GEOS_CHEM_STOP()
+      SUBROUTINE GEOS_CHEM_STOP(Msg_Out)
 !
 ! !USES:
 !
@@ -627,6 +627,9 @@
 !EOP
 !------------------------------------------------------------------------------
 !BOC
+! !INPUT VARIABLES
+!
+      CHARACTER(LEN=512), OPTIONAL :: Msg_Out ! Message to pass to handler
 !
 ! !LOCAL VARIABLES
 !
@@ -643,13 +646,20 @@
       __Iam__('GEOSCHEMSTOP')
 
       ! Only write to stdout if we are on the root CPU
-      am_I_Root = .TRUE. 
+      !am_I_Root = .TRUE. 
+      am_I_Root = SHADOW_am_I_Root
 
 #if defined( USE_TIMERS )
       CALL GEOS_Timer_StopAll( RC )
       CALL GEOS_Timer_PrintAll( am_I_Root, RC )  
 #endif
 
+      ! Pass the failure up the chain using a MAPL macro
+      If (Present(Msg_Out)) Then
+         _FAIL(Trim(Msg_Out))
+      Else
+         _FAIL('Unknown error in GEOS-Chem')
+      End If
 
 #else
       ! Only write to stdout if we are on the root CPU
