@@ -5634,6 +5634,7 @@
       LOGICAL            :: LOCSEMIS
       LOGICAL            :: LN2OEMIS
       LOGICAL            :: LBREMIS
+      LOGICAL            :: LUCXMini
 
       ! Return code
       INTEGER :: RC
@@ -5651,10 +5652,23 @@
       LOCSEMIS     = Input_Opt%LOCSEMIS
       LN2OEMIS     = Input_Opt%LN2OEMIS
       LBREMIS      = Input_Opt%LBREMIS
+      LUCXMini     = Input_Opt%LUCXMini
 
       ! Set module variable doPrint for use in internal functions
       doPrint      = LPRT .AND. am_I_Root
 
+      ! Error checking
+      If (LUCXMini) Then
+         If (Input_Opt%LGravStrat) Then
+            Call Error_Stop('No settling with UCX mini','ucx_mod.F')
+         End If
+         If (Input_Opt%LSolidPSC) Then
+            Call Error_Stop('No solid PSCs in UCX mini','ucx_mod.F')
+         End If
+         If (Input_Opt%LHomNucNAT) Then
+            Call Error_Stop('No hom. NAT nuc. in UCX mini','ucx_mod.F')
+         End If
+      End If
       ! Initialize species ID flags
       id_BCPI    = Ind_('BCPI'      )
       id_Br      = Ind_('Br'        )
