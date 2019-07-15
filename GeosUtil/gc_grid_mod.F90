@@ -142,6 +142,9 @@ CONTAINS
     ELSE IF ( State_Grid%NZ == 72 ) THEN
        State_Grid%MaxTropLev  = 40
        State_Grid%MaxStratLev = 59
+    ELSE IF ( State_Grid%NZ == 26 ) THEN
+       State_Grid%MaxTropLev  = 20
+       State_Grid%MaxStratLev = 26
     ENDIF
 
     ! Set maximum number of levels in the chemistry grid
