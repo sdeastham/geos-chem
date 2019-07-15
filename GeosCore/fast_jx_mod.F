@@ -191,24 +191,24 @@
       INTEGER       :: NLON, NLAT, DAY,  MONTH, DAY_OF_YR, L, N
       INTEGER       :: IOPT, LCHEM
       REAL(fp)      :: CSZA, PRES, SFCA, YLAT,  O3_TOMS
-      REAL(fp)      :: O3_CTM(State_Grid%NZ+1)
-      REAL(fp)      :: T_CTM(State_Grid%NZ+1), OPTD(State_Grid%NZ)
-      REAL(fp)      :: OPTDUST(State_Grid%NZ,NDUST)
-      REAL(fp)      :: OPTAER(State_Grid%NZ,A_)
+      REAL(fp)      :: O3_CTM(L_+1)
+      REAL(fp)      :: T_CTM(L_+1), OPTD(L_)
+      REAL(fp)      :: OPTDUST(L_,NDUST)
+      REAL(fp)      :: OPTAER(L_,A_)
 
       ! Local variables for cloud overlap (hyl, phs)
       INTEGER       :: NUMB, KK, I
-      INTEGER       :: INDIC(State_Grid%NZ+1)
-      INTEGER       :: INDGEN(State_Grid%NZ+1)! = (/ (i,i=1,State_Grid%NZ+1) /)
-      INTEGER       :: KBOT(State_Grid%NZ)
-      INTEGER       :: KTOP(State_Grid%NZ)
-      INTEGER       :: INDICATOR(State_Grid%NZ+2)
-      REAL(fp)      :: FMAX(State_Grid%NZ)    ! maximum cloud fraction 
+      INTEGER       :: INDIC(L_+1)
+      INTEGER       :: INDGEN(L_+1)! = (/ (i,i=1,L_+1) /)
+      INTEGER       :: KBOT(L_)
+      INTEGER       :: KTOP(L_)
+      INTEGER       :: INDICATOR(L_+2)
+      REAL(fp)      :: FMAX(L_)    ! maximum cloud fraction 
                                               !  in a block, size can be to 
-                                              !  FIX(State_Grid%NZ)+1
-      REAL(fp)      :: CLDF1D(State_Grid%NZ)
-      REAL(fp)      :: ODNEW(State_Grid%NZ)
-      REAL(fp)      :: P_CTM(State_Grid%NZ+2)
+                                              !  FIX(L_)+1
+      REAL(fp)      :: CLDF1D(L_)
+      REAL(fp)      :: ODNEW(L_)
+      REAL(fp)      :: P_CTM(L_+2)
 
       LOGICAL       :: AOD999
 
@@ -260,8 +260,8 @@
 
 #ifdef USE_MAXIMUM_RANDOM_OVERLAP
          ! Special setup only for max random overlap
-         DO i = 1,State_Grid%NZ+1
-            INDGEN(i) = i       !(/(i,i=1,State_Grid%NZ+1)/)
+         DO i = 1,L_+1
+            INDGEN(i) = i       !(/(i,i=1,L_+1)/)
          ENDDO
 #endif
 
@@ -305,15 +305,26 @@
                P_CTM(L)     = State_Met%PEDGE( NLON, NLAT, L )
             ENDDO
 
+            ! If L_ > State_Grid%NZ, we have extra layers to allow
+            ! for ozone. Assume fixed 10 hPa reductions down to 1 hPa
+            Do L = State_Grid%NZ+2, L_+1
+               If (P_CTM(L-1).lt.11.0e+0_fp) Then
+                  P_CTM(L) = P_CTM(L-1) * 0.5e+0_fp
+               Else
+                  P_CTM(L) = P_CTM(L-1) - 10.0e+0_fp
+               End If
+            End Do
+
             ! Top edge of P_CTM is top of atmosphere (bmy, 2/13/07)
-            P_CTM(State_Grid%NZ+2)  = 0e+0_fp
+            P_CTM(L_+2)  = 0e+0_fp
 
             ! Temperature profile [K] at (NLON,NLAT)
             T_CTM(1:State_Grid%NZ)  = State_Met%T( NLON, NLAT,
      &                                             1:State_Grid%NZ)
+            T_CTM((State_Grid%NZ+1):L1_) = T_CTM(State_Grid%NZ)
 
             ! Top of atmosphere
-            T_CTM(State_Grid%NZ+1)  = T_CTM(State_Grid%NZ)
+            T_CTM(L_+1)  = T_CTM(L_)
 
             ! Surface albedo [unitless] at (NLON,NLAT)
             SFCA            = State_Met%UVALBEDO(NLON,NLAT)
@@ -341,6 +352,7 @@
                OPTAER(L,IOPT) = ODAER(NLON,NLAT,L,IWV1000,N)
             ENDDO
             ENDDO
+            OPTDUST = 0.0e+0_fp
             DO N = 1, NDUST
             DO L = 1, State_Grid%NZ
               OPTDUST(L,N) = ODMDUST(NLON,NLAT,L,IWV1000,N)
@@ -352,7 +364,9 @@
 !            OPTDUST         = ODMDUST(NLON,NLAT,:,IWV1000,:)
 
             ! Cloud OD profile [unitless] at (NLON,NLAT)
-            OPTD            = State_Met%OPTD(NLON,NLAT,1:State_Grid%NZ)
+            OPTD            = 0.0e+0_fp
+            OPTD(1:State_Grid%NZ) = 
+     &         State_Met%OPTD(NLON,NLAT,1:State_Grid%NZ)
 
             !-----------------------------------------------------------
             !### If you want to exclude aerosol OD, mineral dust OD,
@@ -370,7 +384,9 @@
             !===========================================================
 
             ! Column cloud fraction (not less than zero)
-            CLDF1D = State_Met%CLDF(NLON,NLAT,1:State_Grid%NZ)
+            CLDF1D = 0.0e+0_fp
+            CLDF1D(1:State_Grid%NZ) = 
+     &         State_Met%CLDF(NLON,NLAT,1:State_Grid%NZ)
             WHERE ( CLDF1D < 0e+0_fp ) CLDF1D = 0e+0_fp
 
             ! NOTE: For GEOS-FP and MERRA-2 met fields, the optical
@@ -397,7 +413,9 @@
             !===========================================================
 
             ! Column cloud fraction (not less than zero)
-            CLDF1D = State_Met%CLDF(NLON,NLAT,1:State_Grid%NZ)
+            CLDF1D = 0.0e+0_fp
+            CLDF1D(1:State_Grid%NZ) = 
+     &         State_Met%CLDF(NLON,NLAT,1:State_Grid%NZ)
             WHERE ( CLDF1D < 0e+0_fp ) CLDF1D = 0e+0_fp
 
             ! NOTE: For GEOS-FP and MERRA-2 met fields, the optical
@@ -456,7 +474,7 @@
 !               ! Initialize
 !               FMAX(:)   = 0d0  ! max cloud fraction in each cloud block
 !               ODNEW(:)  = 0d0  ! in-cloud optical depth
-!               CLDF1D    = State_Met%CLDF(1:State_Grid%NZ,NLON,NLAT)
+!               CLDF1D    = State_Met%CLDF(1:L_,NLON,NLAT)
 !               INDICATOR = 0
 !
 !               ! set small negative CLDF or OPTD to zero.
@@ -465,7 +483,7 @@
 !                  CLDF1D               = 0d0
 !                  OPTD                 = 0D0
 !               ELSEWHERE
-!                  INDICATOR(2:State_Grid%NZ+1) = 1
+!                  INDICATOR(2:L_+1) = 1
 !               ENDWHERE
 !
 !               ! Prevent negative opt depth
@@ -475,7 +493,7 @@
 !               ! Generate cloud blocks & get their Bottom and Top levels
 !               !--------------------------------------------------------
 !               INDICATOR = CSHIFT(INDICATOR, 1) - INDICATOR
-!               INDIC     = INDICATOR(1:State_Grid%NZ+1)
+!               INDIC     = INDICATOR(1:L_+1)
 !
 !               ! Number of cloud block
 !               NUMB      = COUNT( INDIC == 1 )
@@ -521,7 +539,7 @@
 !                     CALL MMRAN_16( NUMB,  NLON,  NLAT,      YLAT,
 !     &                              DAY,   MONTH, DAY_OF_YR, CSZA,
 !     &                              TEMP,  SFCA,  OPTDUST,   OPTAER,
-!     &                              State_Grid%NZ, FMAX,  ODNEW,     KBOT,
+!     &                              L_, FMAX,  ODNEW,     KBOT,
 !     &                              KTOP,  O3COL, am_I_Root )
 !
 !               END SELECT
@@ -3256,7 +3274,7 @@ c---Zero / Set index arrays that map Jvalue(j) onto rates
 !
 c-----------------------------------------------------------------------
 c---key LOCAL atmospheric data needed to solve plane-parallel J----
-c-----these are dimensioned JXL_, and must have JXL_ .ge. State_Grid%NZ
+c-----these are dimensioned JXL_, and must have JXL_ .ge. L_
       real(fp), dimension(JXL1_)      :: DDJ,OOJ
       real(fp), dimension(JXL1_+1)    :: PPJ,ZZJ
       integer,dimension(JXL2_+1)      :: JXTRA
@@ -3311,7 +3329,7 @@ C-----------------------------------------------------------------------
       ! PHOTO_JX begins here!
       !=================================================================
 
-      if (State_Grid%NZ+1 .gt. JXL1_) then
+      if (L_+1 .gt. JXL1_) then
         call EXITC(' PHOTO_JX: not enough levels in JX')
       endif
 
@@ -3573,7 +3591,7 @@ c---values at L1_=L_+1 are a pseudo/climatol layer above the top CTM layer (L_)
       enddo
 C-----------------------------------------------------------------------
       call OPMIE (DTAUX,POMEGAX,U0,RFL,AMF2,JXTRA,
-     &        AVGF,FJTOP,FJBOT,FSBOT,FJFLX,FLXD,FLXD0,State_Grid%NZ)
+     &        AVGF,FJTOP,FJBOT,FSBOT,FJFLX,FLXD,FLXD0,L_)
 
 !C-----------------------------------------------------------------------
 
