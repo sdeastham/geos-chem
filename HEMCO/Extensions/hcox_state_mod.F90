@@ -116,6 +116,7 @@ MODULE HCOX_STATE_MOD
      INTEGER                   :: TOMAS_Jeagle   ! TOMAS Jeagle sea salt
      INTEGER                   :: TOMAS_DustDead ! TOMAS sectional Dead Dust
      INTEGER                   :: Volcano        ! Volcano emissions
+     INTEGER                   :: GeoEng         ! GeoEng emissions
      INTEGER                   :: Inorg_Iodine   ! Oceanic inorganic iodine emissions
 
      !----------------------------------------------------------------------
@@ -323,6 +324,7 @@ CONTAINS
     ExtState%TOMAS_Jeagle   = -1
     ExtState%TOMAS_DustDead = -1
     ExtState%Volcano        = -1
+    ExtState%GeoEng         = -1
     ExtState%Inorg_Iodine   = -1
 
     !-----------------------------------------------------------------------
