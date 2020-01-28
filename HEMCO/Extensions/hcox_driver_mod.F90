@@ -110,6 +110,7 @@ CONTAINS
     USE HCOX_GC_RnPbBe_Mod,     ONLY : HCOX_GC_RnPbBe_Init
     USE HCOX_GC_POPs_Mod,       ONLY : HCOX_GC_POPs_Init
     USE HCOX_CH4WetLand_MOD,    ONLY : HCOX_CH4WETLAND_Init
+    USE HCOX_GeoEng_Mod,        ONLY : HCOX_GeoEng_Init
     USE HCOX_Volcano_Mod,       ONLY : HCOX_Volcano_Init
     USE HCOX_Iodine_Mod,        ONLY : HCOX_Iodine_Init
 #if defined( TOMAS )
@@ -264,6 +265,13 @@ CONTAINS
     IF ( RC /= HCO_SUCCESS ) RETURN 
 
     !-----------------------------------------------------------------------
+    ! Geoengineering emissions
+    !-----------------------------------------------------------------------
+    CALL HCOX_GeoEng_Init( amIRoot,  HcoState, 'GeoEng', &
+                           ExtState,  RC ) 
+    IF ( RC /= HCO_SUCCESS ) RETURN 
+
+    !-----------------------------------------------------------------------
     ! Ocean inorganic iodine emissions
     !-----------------------------------------------------------------------
     CALL HCOX_Iodine_Init( amIRoot,  HcoState, 'Inorg_Iodine', &
@@ -341,6 +349,7 @@ CONTAINS
     USE HCOX_GC_RnPbBe_Mod,     ONLY : HCOX_GC_RnPbBe_Run
     USE HCOX_GC_POPs_Mod,       ONLY : HCOX_GC_POPs_Run
     USE HCOX_CH4WetLand_mod,    ONLY : HCOX_CH4Wetland_Run
+    USE HCOX_GeoEng_Mod,        ONLY : HCOX_GeoEng_Run
     USE HCOX_Volcano_Mod,       ONLY : HCOX_Volcano_Run
     USE HCOX_Iodine_Mod,        ONLY : HCOX_Iodine_Run
 #if defined( TOMAS )
@@ -536,6 +545,14 @@ CONTAINS
     ENDIF
 
     !-----------------------------------------------------------------------
+    ! Geoengineering emissions 
+    !-----------------------------------------------------------------------
+    IF ( ExtState%GeoEng > 0 ) THEN
+       CALL HCOX_GeoEng_Run( amIRoot, ExtState, HcoState, RC )
+       IF ( RC /= HCO_SUCCESS ) RETURN 
+    ENDIF
+
+    !-----------------------------------------------------------------------
     ! Ocean inorganic iodine emissions 
     !-----------------------------------------------------------------------
     IF ( ExtState%Inorg_Iodine > 0 ) THEN
@@ -594,6 +611,7 @@ CONTAINS
     USE HCOX_GC_RnPbBe_Mod,     ONLY : HCOX_GC_RnPbBe_Final
     USE HCOX_GC_POPs_Mod,       ONLY : HCOX_GC_POPs_Final
     USE HCOX_CH4WetLand_Mod,    ONLY : HCOX_CH4Wetland_Final
+    USE HCOX_GeoEng_Mod,        ONLY : HCOX_GeoEng_Final
     USE HCOX_Volcano_Mod,       ONLY : HCOX_Volcano_Final
     USE HCOX_Iodine_Mod,        ONLY : HCOX_Iodine_Final
 #if defined( TOMAS )
@@ -699,6 +717,10 @@ CONTAINS
 
        IF ( ExtState%Volcano > 0 ) THEN
           CALL HCOX_Volcano_Final( ExtState )
+       ENDIF
+
+       IF ( ExtState%GeoEng > 0 ) THEN
+          CALL HCOX_GeoEng_Final( ExtState )
        ENDIF
 
        IF ( ExtState%Inorg_Iodine > 0 ) THEN
