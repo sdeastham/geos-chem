@@ -167,6 +167,9 @@ MODULE Chem_GridCompMod
   ! Memory debug level
   INTEGER                          :: MemDebugLevel
 
+  ! Whether to flip some input data
+  LOGICAL                          :: flip_vertical
+
 #if defined( MODEL_GEOS )
   ! GEOS-5 only
   ! Flag to initialize species concentrations from external fields. Read 
@@ -1860,7 +1863,7 @@ CONTAINS
     TYPE(Species), POINTER       :: SpcInfo
 
     ! To read various options 
-    INTEGER                      :: DoIt 
+    INTEGER                      :: DoIt
     REAL                         :: Val, OzPause
 
     ! Mie table updates
@@ -1871,6 +1874,9 @@ CONTAINS
     TYPE(MAPL_MetaComp), POINTER :: STATE => NULL()
     REAL(ESMF_KIND_R8), POINTER  :: Ptr3D_R8(:,:,:) => NULL()
 #endif
+
+    ! Needed to interpret an option
+    Integer :: flip_vertical_int
 
     __Iam__('Initialize_')
 
@@ -1957,6 +1963,12 @@ CONTAINS
                                  Label="MEMORY_DEBUG_LEVEL:" , RC=STATUS)
     _VERIFY(STATUS)
 #endif
+
+    ! Do we need to flip data?
+    call ESMF_ConfigGetAttribute(GeosCF, Flip_Vertical_Int, &
+                                 Label="FLIP_VERTICAL:" , RC=STATUS)
+    _VERIFY(STATUS)
+    Flip_Vertical = (Flip_Vertical_Int > 0)
 
     !=======================================================================
     ! Save values from the resource file (GCHP.rc for GCHP)

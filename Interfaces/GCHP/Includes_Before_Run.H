@@ -60,12 +60,18 @@
   State_Met%SNOMAS              = SNOMAS                     ! kg/m2
   State_Met%SUNCOS              = zenith                     ! unitless
   State_Met%SUNCOSmid           = zenith                     ! 1
-  State_Met%U                   = ULL                        ! m/s
   State_Met%U10M                = U10M                       ! m/s
   State_Met%USTAR               = USTAR                      ! m/s
-  State_Met%V                   = VLL                        ! m/s
   State_Met%V10M                = V10M                       ! m/s
   State_Met%Z0                  = Z0                         ! m
+
+  If (Flip_Vertical) Then
+     State_Met%U                = ULL(:,:,State_Grid%NZ:1:-1) ! m/s
+     State_Met%V                = VLL(:,:,State_Grid%NZ:1:-1) ! m/s
+  Else
+     State_Met%U                = ULL                        ! m/s
+     State_Met%V                = VLL                        ! m/s
+  End If
 
   ! Set LWI based on land type fractions in imports: 0=water, 1=land, 2=ice
   DO J=1,State_Grid%NY
@@ -145,10 +151,15 @@
 
   ! These fields are set to match the GCC conventions and to ensure that 
   ! transport is correctly implemented.
-  State_Met%SPHU                =(SPHU1+SPHU2)*0.5d3         ! kg/kg -> g/kg
-  State_Met%SPHU1               = SPHU1       *1.0d3         ! kg/kg -> g/kg
-  State_Met%SPHU2               = SPHU2       *1.0d3         ! kg/kg -> g/kg
-  State_Met%T                   =(TMPU1+TMPU2)*0.5d0         ! K
+  If (Flip_Vertical) Then
+     State_Met%SPHU1               = SPHU1(:,:,State_Grid%NZ:1:-1)*1.0d3   ! kg/kg -> g/kg
+     State_Met%SPHU2               = SPHU2(:,:,State_Grid%NZ:1:-1)*1.0d3   ! kg/kg -> g/kg
+  Else
+     State_Met%SPHU1               = SPHU1       *1.0d3         ! kg/kg -> g/kg
+     State_Met%SPHU2               = SPHU2       *1.0d3         ! kg/kg -> g/kg
+  End If
+  State_Met%SPHU                =(State_Met%SPHU1+State_Met%SPHU2)*0.5d0 ! kg/kg -> g/kg
+  State_Met%T                   =(State_Met%TMPU1+State_Met%TMPU2)*0.5d0 ! K
 
   ! Create total optical depth field                         ! 1
   State_Met%OPTD                = State_Met%TAUCLI + State_Met%TAUCLW
