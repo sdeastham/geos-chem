@@ -392,7 +392,7 @@ CONTAINS
           ENDIF
        ENDIF
 
-#if !defined( MODEL_GEOS )
+#if !defined( ESMF_ )
        !====================================================================
        ! Add some extra error checks for collections that are in the
        ! collection name list (and therefore will be archived)
