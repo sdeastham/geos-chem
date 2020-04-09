@@ -417,24 +417,6 @@ CONTAINS
 !\\
 ! !INTERFACE:
 !
-<<<<<<< HEAD
-  SUBROUTINE Spc_Info( am_I_Root,       iName,          Input_Opt,           &
-                       KppSpcId,        oFullName,      oFormula,            &
-                       oMW_g,           oEmMW_g,        oMolecRatio,         &
-                       oBackgroundVV,   oHenry_K0,      oHenry_CR,           &
-                       oHenry_PKA,      oDensity,       oRadius,             &
-                       oDD_AeroDryDep,  oDD_DustDryDep, oDD_DvzAerSnow,      &
-                       oDD_DvzMinVal,   oDD_F0,         oDD_KOA,             &
-                       oDD_HStar_Old,   oMP_SizeResAer, oMP_SizeResNum,      &
-                       oWD_RetFactor,   oWD_LiqAndGas,  oWD_ConvFacI2G,      &
-                       oWD_AerScavEff,  oWD_KcScaleFac, oWD_RainoutEff,      &
-                       oWD_CoarseAer,   oIs_DryAlt,                          &
-                       oIs_Drydep,      oIs_Gas,        oIs_HygroGrowth,     &
-                       oIs_Photolysis,  oIs_Wetdep,     oIs_InRestart,       &
-                       oIs_Hg0,         oIs_Hg2,        oIs_HgP,             &
-                       oDiagName,       Found,          Underscores,         &
-                       RC                                                   )
-=======
   SUBROUTINE Spc_Info( am_I_Root,       iName,          Input_Opt,       &
                        KppSpcId,        oFullName,      oFormula,        &
                        oMW_g,           oEmMW_g,        oMolecRatio,     &
@@ -446,13 +428,12 @@ CONTAINS
                        oMP_BinNumber,                                    &
                        oWD_RetFactor,   oWD_LiqAndGas,  oWD_ConvFacI2G,  &
                        oWD_AerScavEff,  oWD_KcScaleFac, oWD_RainoutEff,  &
-                       oWD_CoarseAer,                                    &
+                       oWD_CoarseAer,   oIs_DryAlt,                      &
                        oIs_Drydep,      oIs_Gas,        oIs_HygroGrowth, &
                        oIs_Photolysis,  oIs_Wetdep,     oIs_InRestart,   &
                        oIs_Hg0,         oIs_Hg2,        oIs_HgP,         &
                        oDiagName,       Found,          Underscores,     &
                        RC )
->>>>>>> Initial implementation of additional species
 !
 ! !USES:
 !
