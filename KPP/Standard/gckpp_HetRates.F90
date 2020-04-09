@@ -348,7 +348,7 @@ MODULE GCKPP_HETRATES
       HBr_RTEMP     = 0.0_fp
       HOBr_RTEMP    = 0.0_fp
       KHETI_SLA     = 0.0_fp
-      NAEROTYPE         = State_Chm%nAeroType
+      NAEROTYPE     = State_Chm%nAeroType
       QICE          = 0.0_fp
       QLIQ          = 0.0_fp
       SPC_BrNO3     = 0.0_fp
