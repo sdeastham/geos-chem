@@ -345,7 +345,7 @@ MODULE GCKPP_HETRATES
       HBr_RTEMP     = 0.0_fp
       HOBr_RTEMP    = 0.0_fp
       KHETI_SLA     = 0.0_fp
-      NAERO         = State_Chm%nAero
+      NAERO         = State_Chm%nAeroType
       QICE          = 0.0_fp
       QLIQ          = 0.0_fp
       SPC_BrNO3     = 0.0_fp
@@ -595,16 +595,16 @@ MODULE GCKPP_HETRATES
       !--------------------------------------------------------------------
 
       ! Aerosol specific surface area, cm2(aerosol)/cm3(air)
-      XAREA(1:State_Chm%nAero) = State_Chm%AeroArea(I,J,L,:)
+      XAREA(1:State_Chm%nAeroType) = State_Chm%AeroArea(I,J,L,:)
 
       ! Aerosol effective radius, cm
-      XRADI(1:State_Chm%nAero) = State_Chm%AeroRadi(I,J,L,:)
+      XRADI(1:State_Chm%nAeroType) = State_Chm%AeroRadi(I,J,L,:)
 
       ! Aerosol specific volume, cm3(aerosol)/cm3(air)
-      XVOL(1:State_Chm%nAero)  = XAREA(1:State_Chm%nAero) * XRADI(1:State_Chm%nAero) / 3e+0_fp
+      XVOL(1:State_Chm%nAeroType)  = XAREA(1:State_Chm%nAeroType) * XRADI(1:State_Chm%nAeroType) / 3e+0_fp
 
       ! Aerosol water content, cm3(H2O)/cm3(air) [note: AeroH2O has units g/m3]
-      XH2O(1:State_Chm%nAero)  = State_Chm%AeroH2O(I,J,L,:) * 1e-6_fp
+      XH2O(1:State_Chm%nAeroType)  = State_Chm%AeroH2O(I,J,L,:) * 1e-6_fp
 
       !--------------------------------------------------------------------
       ! Get fields from State_Met, State_Chm, and Input_Opt
