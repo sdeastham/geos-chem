@@ -164,6 +164,9 @@ MODULE Chem_GridCompMod
   ! Is this being run as a CTM?
   INTEGER                          :: IsCTM
 
+  ! Is the meteorology incorrectly oriented?
+  LOGICAL                          :: invert_met
+
   ! Memory debug level
   INTEGER                          :: MemDebugLevel
 
@@ -505,6 +508,7 @@ CONTAINS
     CHARACTER(LEN=127)            :: FullName, Formula 
     LOGICAL                       :: FriendDyn, FriendTurb
 #endif
+    INTEGER                       :: temp_int
 
     __Iam__('SetServices')
 
@@ -547,8 +551,12 @@ CONTAINS
     call MAPL_GetResource( STATE, IsCTM, label='GEOSChem_CTM:', & 
                            default=1, rc=status )
     _VERIFY(STATUS)
-#endif
 
+    call MAPL_GetResource( STATE, temp_int, label='INVERT_MET:', & 
+                           default=0, rc=status )
+    _VERIFY(STATUS)
+    invert_met = (temp_int > 0)
+#endif
     !=======================================================================
     !                 %%% ESMF Functional Services %%%
     !=======================================================================
