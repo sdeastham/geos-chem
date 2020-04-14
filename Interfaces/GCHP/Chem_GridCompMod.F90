@@ -2047,21 +2047,21 @@ CONTAINS
     _ASSERT(RC==GC_SUCCESS,'Error calling Init_State_Grid')
   
     ! Pass grid information obtained from Extract_ to State_Grid
-    State_Grid%NX          = IM            ! # lons   on this PET
-    State_Grid%NY          = JM            ! # lats   on this PET
-    State_Grid%NZ          = LM            ! # levels on this PET
-    State_Grid%GlobalNX    = IM_WORLD      ! # lons   in global grid
-    State_Grid%GlobalNY    = JM_WORLD      ! # lats   in global grid
-    State_Grid%NativeNZ    = LM_WORLD      ! # levels in global grid
-    State_Grid%XMinOffset  = 1             ! X offset from global grid
-    State_Grid%XMaxOffset  = State_Grid%NX ! X offset from global grid
-    State_Grid%YMinOffset  = 1             ! Y offset from global grid
-    State_Grid%YMaxOffset  = State_Grid%NY ! Y offset from global grid
-    State_Grid%MaxTropLev  = 40            ! # trop. levels
+    State_Grid%NX          = IM               ! # lons   on this PET
+    State_Grid%NY          = JM               ! # lats   on this PET
+    State_Grid%NZ          = LM               ! # levels on this PET
+    State_Grid%GlobalNX    = IM_WORLD         ! # lons   in global grid
+    State_Grid%GlobalNY    = JM_WORLD         ! # lats   in global grid
+    State_Grid%NativeNZ    = LM_WORLD         ! # levels in global grid
+    State_Grid%XMinOffset  = 1                ! X offset from global grid
+    State_Grid%XMaxOffset  = State_Grid%NX    ! X offset from global grid
+    State_Grid%YMinOffset  = 1                ! Y offset from global grid
+    State_Grid%YMaxOffset  = State_Grid%NY    ! Y offset from global grid
+    State_Grid%MaxTropLev  = Min(40,LM_WORLD) ! # trop. levels
 #if defined( MODEL_GEOS )
-    State_Grid%MaxStratLev = value_LLSTRAT ! # strat. levels
+    State_Grid%MaxStratLev = value_LLSTRAT    ! # strat. levels
 #else
-    State_Grid%MaxStratLev = 59            ! # strat. levels
+    State_Grid%MaxStratLev = Min(59,LM_WORLD) ! # strat. levels
 #endif
 
     ! Call the GIGC initialize routine
