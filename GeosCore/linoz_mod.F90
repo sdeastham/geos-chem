@@ -349,11 +349,16 @@ CONTAINS
           !END IF
 
           LBOT = State_Met%ChemGridLev(I,J) + 1
-          LPOS = 1
-          DO WHILE (State_Met%PEDGE(I,J,LPOS+1) .GE. 0.3e+0_f8)
-             LPOS = LPOS +1
-          ENDDO
-          LPOS = LPOS-1
+          If (State_Met%PEDGE(I,J,State_Grid%NZ+1).ge.0.3e+0_f8) Then
+             LPOS = State_Grid%NZ
+          Else
+             LPOS = 1
+             DO WHILE (State_Met%PEDGE(I,J,LPOS+1) .GE. 0.3e+0_f8)
+                LPOS = LPOS +1
+             ENDDO
+             LPOS = LPOS-1
+          End If
+
 
           !IF ( prtDebug ) CALL DEBUG_MSG('DONE GET_PEDGE')
 
