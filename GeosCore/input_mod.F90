@@ -2829,6 +2829,14 @@ CONTAINS
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%LTRAN
 
+    ! Go for "pure transport" mode?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LTRANPURE', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%LTRANPURE
+
     ! Fill negative values
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LFILL', RC )
     IF ( RC /= GC_SUCCESS ) THEN
@@ -2862,6 +2870,8 @@ CONTAINS
        WRITE( 6, '(  a)' ) '--------------'
        WRITE( 6, 100     ) 'Turn on transport?          : ', &
                             Input_Opt%LTRAN
+       WRITE( 6, 100     ) '  --> Transport ONLY?       : ', &
+                            Input_Opt%LTRANPURE
        WRITE( 6, 100     ) 'Let TPCORE Fill negatives?  : ', &
                             Input_Opt%LFILL
        WRITE( 6, 110     ) 'IORD, JORD, KORD for TPCORE?: ', &

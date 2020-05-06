@@ -215,6 +215,7 @@ MODULE Input_Opt_Mod
      ! TRANSPORT MENU fields
      !----------------------------------------
      LOGICAL                     :: LTRAN
+     LOGICAL                     :: LTRANPURE
      LOGICAL                     :: LFILL
      INTEGER                     :: TPCORE_IORD
      INTEGER                     :: TPCORE_JORD
@@ -734,6 +735,7 @@ CONTAINS
     ! TRANSPORT MENU fields
     !----------------------------------------
     Input_Opt%LTRAN                  = .FALSE.
+    Input_Opt%LTRANPURE              = .FALSE.
     Input_Opt%LFILL                  = .FALSE.
     Input_Opt%TPCORE_IORD            = .FALSE.
     Input_Opt%TPCORE_JORD            = .FALSE.
