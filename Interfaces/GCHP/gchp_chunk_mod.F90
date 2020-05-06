@@ -581,6 +581,16 @@ CONTAINS
        write(*,*) ' '
     ENDIF
 
+    If (Input_Opt%LTranPure.and. &
+             (Input_Opt%LTURB   .or. &
+              Input_Opt%LCONV   .or. &
+              Input_Opt%LCHEM   .or. &
+              Input_Opt%LEMIS   .or. &
+              Input_Opt%LDRYD   .or. &
+              Input_Opt%LWETD)) Then
+       _FAIL('Pure transport simulation attempted with invalid co-settings')
+    End If
+     
     !-------------------------------------------------------------------------
     ! Pre-Run assignments
     !-------------------------------------------------------------------------
