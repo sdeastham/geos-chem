@@ -620,8 +620,10 @@ CONTAINS
     CALL SetHcoTime ( HcoState,   ExtState,   year,    month,   day,   &
                       dayOfYr,    hour,       minute,  second,  DoEmis,  RC )
 
-    ! Calculate MODIS leaf area indexes needed for dry deposition
-    CALL Compute_XLAI( Input_Opt, State_Grid, State_Met, RC )
+    If (.not. Input_Opt%LTranPure) Then
+       ! Calculate MODIS leaf area indexes needed for dry deposition
+       CALL Compute_XLAI( Input_Opt, State_Grid, State_Met, RC )
+    End If
 
     ! Set the pressure at level edges [hPa] from the ESMF environment
     CALL Accept_External_Pedge( State_Met = State_Met,  &

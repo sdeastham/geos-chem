@@ -3804,7 +3804,7 @@ CONTAINS
 #if defined( MODEL_GEOS )
        IF ( FIRST .OR. FIRSTREWIND ) THEN
 #else
-       IF ( FIRST ) THEN
+       IF ( FIRST .and. (.not. Input_Opt%LTranPure) ) THEN
 #endif
 
           ! Set Olson fractional land type from import (ewl)
@@ -3854,7 +3854,7 @@ CONTAINS
                               State_Met%TO3, PTR_GCCTTO3, __RC__ )
        ENDIF
 #else
-       IF ( calcOzone ) THEN
+       IF ( calcOzone .and. (.not. Input_Opt%LTranPure) ) THEN
           IF ( FIRST ) THEN
              CALL CalcTotalOzone( am_I_Root, PLE, GCCTROPP, __RC__ )
           ENDIF
@@ -3951,7 +3951,8 @@ CONTAINS
 #endif
 
 #if !defined( MODEL_GEOS )
-             where( State_Met%HFLUX .eq. 0.) State_Met%HFLUX = 1e-5
+             If (.not. Input_Opt%LTranPure) &
+                where( State_Met%HFLUX .eq. 0.) State_Met%HFLUX = 1e-5
 #endif
 
 #if defined( MODEL_GEOS )
@@ -4005,7 +4006,7 @@ CONTAINS
                                         __RC__ )
           ENDIF
 
-          IF ( calcOzone ) THEN
+          IF ( calcOzone .and. (.not. Input_Opt%LTranPure) ) THEN
              !================================================================
              ! Total ozone and total tropospheric ozone for export [dobsons].
              ! 2.69E+20 per dobson.
