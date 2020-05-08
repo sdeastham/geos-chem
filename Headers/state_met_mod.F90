@@ -530,6 +530,7 @@ CONTAINS
     !-------------------------
     ! CLDFRC [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%CLDFRC( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%CLDFRC', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -537,10 +538,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'CLDFRC', State_Met%CLDFRC, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! CLDTOPS [level]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%CLDTOPS( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%CLDTOPS', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -548,6 +551,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'CLDTOPS', State_Met%CLDTOPS, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     ! Convective fractions are not yet a standard GEOS-FP
     ! field. Only available to online model (ckeller, 3/4/16)
@@ -555,6 +559,7 @@ CONTAINS
     !-------------------------
     ! CNV_FRC [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%CNV_FRC( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%CNV_FRC', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -562,11 +567,13 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'CNVFRC', State_Met%CNV_FRC, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 #endif
 
     !-------------------------
     ! Convective Depth [m]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%CONV_DEPTH( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%CONV_DEPTH', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -574,10 +581,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'CONVDEPTH', State_Met%CONV_DEPTH, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! EFLUX [W m-2]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%EFLUX( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%EFLUX', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -585,6 +594,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'EFLUX', State_Met%EFLUX, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-----------------------------
     ! Lightning density [#/km2/s]
@@ -677,6 +687,7 @@ CONTAINS
     !-------------------------
     ! GWETROOT [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%GWETROOT( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%GWETROOT', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -684,10 +695,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'GWETROOT', State_Met%GWETROOT, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! GWETTOP [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%GWETTOP( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%GWETTOP', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -695,10 +708,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'GWETTOP', State_Met%GWETTOP, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! HFLUX [W m-2]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%HFLUX( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%HFLUX', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -706,6 +721,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'HFLUX', State_Met%HFLUX, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! IsWater
@@ -744,6 +760,7 @@ CONTAINS
     !-------------------------
     ! LAI [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%LAI( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%LAI', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -751,6 +768,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'LAI', State_Met%LAI, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! LWI [1]
@@ -766,6 +784,7 @@ CONTAINS
     !-------------------------
     ! PARDR [W m-2]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%PARDR( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PARDR', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -773,10 +792,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'PARDR', State_Met%PARDR, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! PARDF [W m-2]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%PARDF( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PARDF', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -784,6 +805,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'PARDF', State_Met%PARDF, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! PBLH [m]
@@ -843,6 +865,7 @@ CONTAINS
     !-------------------------
     ! PHIS [m2 s-2]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%PHIS( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PHIS', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -850,10 +873,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'PHIS', State_Met%PHIS, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! PRECANV [kg m-2 s-1], converted to [mm day-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%PRECANV( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PRECANV', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -861,10 +886,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'PRECANV', State_Met%PRECANV, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! PRECCON [kg m-2 s-1], converted to [mm day-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%PRECCON( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PRECCON', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -872,10 +899,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'PRECCON', State_Met%PRECCON, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! PRECLSC [kg m-2 s-1], converted to [mm day-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%PRECLSC( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PRECLSC', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -883,10 +912,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'PRECLSC', State_Met%PRECLSC, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! PRECTOT [kg m-2 s-1], converted to [mm day-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%PRECTOT( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PRECTOT', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -894,6 +925,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'PRECTOT', State_Met%PRECTOT, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! PS1_WET [hPa]
@@ -964,6 +996,7 @@ CONTAINS
     !-------------------------
     ! SEAICE00 [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SEAICE00( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE00', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -971,10 +1004,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SEAICE00', State_Met%SEAICE00, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SEAICE10 [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SEAICE10( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE10', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -982,10 +1017,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SEAICE10', State_Met%SEAICE10, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SEAICE20 [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SEAICE20( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE20', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -993,10 +1030,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SEAICE20', State_Met%SEAICE20, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SEAICE30 [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SEAICE30( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE30', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1004,10 +1043,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SEAICE30', State_Met%SEAICE30, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SEAICE40 [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SEAICE40( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE40', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1015,10 +1056,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SEAICE40', State_Met%SEAICE40, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SEAICE50 [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SEAICE50( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE50', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1026,10 +1069,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SEAICE50', State_Met%SEAICE50, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SEAICE60 [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SEAICE60( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE60', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1037,10 +1082,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SEAICE60', State_Met%SEAICE60, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SEAICE70 [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SEAICE70( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE70', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1048,10 +1095,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SEAICE70', State_Met%SEAICE70, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SEAICE80 [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SEAICE80( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE80', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1059,10 +1108,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SEAICE80', State_Met%SEAICE80, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SEAICE90 [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SEAICE90( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE90', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1070,6 +1121,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SEAICE90', State_Met%SEAICE90, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SLP [hPa]
@@ -1085,6 +1137,7 @@ CONTAINS
     !-------------------------
     ! SNODP [m]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SNODP( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SNODP', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1092,10 +1145,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SNODP', State_Met%SNODP, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SNOMAS [kg m-2]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SNOMAS( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SNOMAS', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1103,10 +1158,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SNOMAS', State_Met%SNOMAS, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SUNCOS [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SUNCOS( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SUNCOS', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1114,10 +1171,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SUNCOS', State_Met%SUNCOS, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SUNCOSmid [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SUNCOSmid( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SUNCOSmid', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1125,10 +1184,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SUNCOSmid', State_Met%SUNCOSmid, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SWGDN [W m-2]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%SWGDN( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SWGDN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1136,10 +1197,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'SWGDN', State_Met%SWGDN, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! TO3 [dobsons]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%TO3( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%TO3', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1147,6 +1210,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'TO3', State_Met%TO3, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! TropLev [1]
@@ -1184,6 +1248,7 @@ CONTAINS
     !-------------------------
     ! TS [K]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%TS( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%TS', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1191,10 +1256,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'TS', State_Met%TS, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! TSKIN [K]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%TSKIN( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%TSKIN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1202,10 +1269,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'TSKIN', State_Met%TSKIN, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! U10M [m s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%U10M( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%U10M', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1213,10 +1282,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'U10M', State_Met%U10M, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! USTAR [m -s]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%USTAR( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%USTAR', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1224,10 +1295,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'USTAR', State_Met%USTAR, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! UVALBEDO [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%UVALBEDO( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%UVALBEDO', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1235,10 +1308,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'UVALBEDO', State_Met%UVALBEDO, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! V10M [m s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%V10M( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%V10M', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1246,10 +1321,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'V10M', State_Met%V10M, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! Z0 [m]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%Z0( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%Z0', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1257,6 +1334,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'Z0', State_Met%Z0, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !=======================================================================
     ! Allocate 3-D Arrays
@@ -1342,6 +1420,7 @@ CONTAINS
     !-------------------------
     ! CLDF [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%CLDF( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%CLDF', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1349,10 +1428,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'CLDF', State_Met%CLDF, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! CMFMC [kg m-2 s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%CMFMC( IM, JM, LM+1 ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%CMFMC', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1360,6 +1441,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'CMFMC', State_Met%CMFMC, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! DELP [hPa]
@@ -1431,6 +1513,7 @@ CONTAINS
     !-------------------------
     ! DQRCU [kg kg-1 s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%DQRCU( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%DQRCU', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1438,10 +1521,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'DQRCU', State_Met%DQRCU, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! DQRLSAN [kg kg-1 s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%DQRLSAN( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%DQRLSAN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1449,10 +1534,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'DQRLSAN', State_Met%DQRLSAN, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! DTRAIN [kg m-2 s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%DTRAIN( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%DTRAIN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1460,10 +1547,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'DTRAIN', State_Met%DTRAIN, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! OMEGA [Pa s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%OMEGA( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%OMEGA', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1471,10 +1560,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'OMEGA', State_Met%OMEGA, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! OPTD [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%OPTD( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%OPTD', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1482,6 +1573,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'OPTD', State_Met%OPTD, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! PEDGE [hPa]
@@ -1530,6 +1622,7 @@ CONTAINS
     !-------------------------
     ! QI [kg kg-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%QI( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%QI', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1537,10 +1630,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'QI', State_Met%QI, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! QL [kg kg-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%QL( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%QL', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1548,6 +1643,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'QL', State_Met%QL, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! RH [%]
@@ -1607,6 +1703,7 @@ CONTAINS
     !-------------------------
     ! TAUCLI [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%TAUCLI( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%TAUCLI', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1614,10 +1711,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'TAUCLI', State_Met%TAUCLI, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! TAUCLW [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%TAUCLW( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%TAUCLW', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1625,6 +1724,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'TAUCLW', State_Met%TAUCLW, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! U [m s-1]
@@ -1654,6 +1754,7 @@ CONTAINS
     !-------------------------
     ! UPDVVEL [hPa s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%UPDVVEL( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%UPDVVEL', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1661,6 +1762,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'UPDVVEL', State_Met%UPDVVEL, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 #endif
 
     ! Pick the proper vertical dimension
@@ -1669,6 +1771,7 @@ CONTAINS
     !-------------------------
     ! PFICU [kg m-2 s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%PFICU( IM, JM, LX ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PFICU', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1676,10 +1779,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'PFICU', State_Met%PFICU, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! PFILSAN [kg m-2 s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%PFILSAN( IM, JM, LX ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PFILSAN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1687,10 +1792,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'PFILSAN', State_Met%PFILSAN, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! PFLCU [kg m-2 s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%PFLCU( IM, JM, LX ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PFLCU', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1698,10 +1805,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'PFLCU', State_Met%PFLCU, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! PFLLSAN [kg m-2 s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%PFLLSAN( IM, JM, LX ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PFLLSAN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1709,10 +1818,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'PFLLSAN', State_Met%PFLLSAN, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! REEVAPCN [kg kg-1 s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%REEVAPCN( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%REEVAPCN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1720,10 +1831,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'REEVAPCN', State_Met%REEVAPCN, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! REEVAPLS [kg kg-1 s-1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%REEVAPLS( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%REEVAPLS', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1731,6 +1844,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'REEVAPLS', State_Met%REEVAPLS, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! SPHU1 [g kg-1]
@@ -1794,6 +1908,7 @@ CONTAINS
     !-------------------------
     ! IREG [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%IREG( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%IREG', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1801,10 +1916,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'IREG', State_Met%IREG, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! ILAND [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%ILAND( IM, JM, NSURFTYPE ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%ILAND', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1812,10 +1929,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'ILAND', State_Met%ILAND, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! IUSE [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%IUSE( IM, JM, NSURFTYPE ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%IUSE', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1823,10 +1942,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'IUSE', State_Met%IUSE, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! XLAI [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%XLAI( IM, JM, NSURFTYPE ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%XLAI', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1834,10 +1955,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'XLAI', State_Met%XLAI, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! MODISLAI [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%MODISLAI( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%MODISLAI', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1845,10 +1968,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'MODISLAI', State_Met%MODISLAI, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! XLAI2 [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%XLAI2( IM, JM, NSURFTYPE ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%XLAI2', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1856,10 +1981,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'XLAI2', State_Met%XLAI2, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! LANDTYPEFRAC [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%LANDTYPEFRAC( IM, JM, NSURFTYPE ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%LANDTYPEFRAC', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1867,10 +1994,12 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'LANDTYPEFRAC', State_Met%LANDTYPEFRAC, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !-------------------------
     ! XLAI_NATIVE [1]
     !-------------------------
+    If (.not.Input_Opt%LTranPure) Then
     ALLOCATE( State_Met%XLAI_NATIVE( IM, JM, NSURFTYPE ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%XLAI_NATIVE', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1878,6 +2007,7 @@ CONTAINS
     CALL Register_MetField( Input_Opt, 'XLAINATIVE', State_Met%XLAI_NATIVE, &
                             State_Met, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
     !=======================================================================
     ! Allocate fields for querying which vertical regime a grid box is in
