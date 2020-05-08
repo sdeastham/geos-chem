@@ -627,6 +627,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! CLDFRC [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'CLDFRC'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -641,10 +642,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! CLDTOPS [level]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'CLDTOPS'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -659,6 +662,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
 #ifdef MODEL_GEOS
     !------------------------------------------------------------------------
@@ -666,6 +670,7 @@ CONTAINS
     ! Convective fractions are not yet a standard GEOS-FP
     ! field. Only available to online model (ckeller, 3/4/16)
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'CNVFRC'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -680,11 +685,13 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 #endif
 
     !------------------------------------------------------------------------
     ! Convective Depth [m]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'CONVDEPTH'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -699,10 +706,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! EFLUX [W m-2]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'EFLUX'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -717,6 +726,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    EndIf
 
     !---------------------------------------------------------------------
     ! Lightning density [#/km2/s]
@@ -884,6 +894,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! GWETROOT [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'GWETROOT'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -898,10 +909,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! GWETTOP [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'GWETTOP'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -916,10 +929,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! HFLUX [W m-2]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'HFLUX'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -934,6 +949,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! IMIX [1]: Local variable for PBL mixing -- Do not register this
@@ -957,6 +973,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! IREG [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'IREG'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -971,6 +988,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! IsWater (do not register for diagnostics)
@@ -1051,6 +1069,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! LAI [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'LAI'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1065,6 +1084,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! LWI [1]
@@ -1087,6 +1107,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! MODISLAI [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'MODISLAI'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1101,10 +1122,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! PARDR [W m-2]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'PARDR'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1119,10 +1142,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! PARDF [W m-2]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'PARDF'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1137,6 +1162,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! PBLH [m]
@@ -1231,6 +1257,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! PHIS [m2 s-2], converted to [m] after data read
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'PHIS'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1245,10 +1272,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! PRECANV [kg m-2 s-1], converted to [mm day-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'PRECANV'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1263,10 +1292,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! PRECCON [kg m-2 s-1], converted to [mm day-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'PRECCON'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1281,10 +1312,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! PRECLSC [kg m-2 s-1], converted to [mm day-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'PRECLSC'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1299,10 +1332,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! PRECTOT [kg m-2 s-1], converted to [mm day-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'PRECTOT'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1317,6 +1352,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! PS1_WET [hPa]
@@ -1426,6 +1462,7 @@ CONTAINS
        RETURN
     ENDIF
 
+    If (.not.Input_Opt%LTranPure) Then
     !------------------------------------------------------------------------
     ! SEAICE00 [1]
     !------------------------------------------------------------------------
@@ -1605,6 +1642,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! SLP [hPa]
@@ -1627,6 +1665,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! SNODP [m]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'SNODP'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1641,10 +1680,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! SNOMAS [kg m-2]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'SNOMAS'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1659,10 +1700,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! SUNCOS [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'SUNCOS'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1677,10 +1720,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! SUNCOSmid [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'SUNCOSmid'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1695,10 +1740,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! SWGDN [W m-2]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'SWGDN'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1713,10 +1760,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! TO3 [dobsons]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'TO3'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1731,6 +1780,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! TropLev [1]
@@ -1789,6 +1839,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! TS [K]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'TS'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1803,10 +1854,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! TSKIN [K]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'TSKIN'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1821,10 +1874,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! U10M [m s-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'U10M'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1839,10 +1894,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! USTAR [m -s]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'USTAR'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1857,10 +1914,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! UVALBEDO [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'UVALBEDO'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1875,10 +1934,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! V10M [m s-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'V10M'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1893,10 +1954,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! Z0 [m]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'Z0'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1911,6 +1974,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !=======================================================================
     ! Allocate 3-D Arrays
@@ -2027,6 +2091,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! CLDF [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'CLDF'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2041,10 +2106,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! CMFMC [kg m-2 s-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'CMFMC'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2060,6 +2127,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! DELP [hPa]
@@ -2154,6 +2222,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! DQRCU [kg kg-1 s-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'DQRCU'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2168,10 +2237,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! DQRLSAN [kg kg-1 s-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'DQRLSAN '
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2186,10 +2257,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! DTRAIN [kg m-2 s-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'DTRAIN'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2204,10 +2277,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! ILAND [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'ILAND'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2223,10 +2298,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! IUSE [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'IUSE'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2242,10 +2319,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! LANDTYPEFRAC [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'LANDTYPEFRAC'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2261,6 +2340,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! MAIRDEN [kg m-3]
@@ -2283,6 +2363,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! OMEGA [Pa s-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'OMEGA'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2297,10 +2378,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! OPTD [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'OPTD'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2315,6 +2398,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! PEDGE [hPa]
@@ -2357,6 +2441,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! PFICU [kg m-2 s-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'PFICU'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2372,10 +2457,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! PFILSAN [kg m-2 s-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'PFILSAN'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2391,10 +2478,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! PFLCU [kg m-2 s-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'PFLCU'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2410,10 +2499,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! PFLLSAN [kg m-2 s-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'PFLLSAN'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2429,6 +2520,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! PMID [1]
@@ -2469,6 +2561,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! QI [kg kg-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'QI'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2483,10 +2576,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! QL [kg kg-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'QL'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2501,10 +2596,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! REEVAPCN [kg kg-1 s-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'REEVAPCN'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2519,10 +2616,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! REEVAPLS [kg kg-1 s-1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'REEVAPLS'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2537,6 +2636,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! RH [%]
@@ -2649,6 +2749,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! TAUCLI [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'TAUCLI'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2663,10 +2764,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! TAUCLW [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'TAUCLW'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2681,6 +2784,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! THETA [K]
@@ -2815,6 +2919,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! XLAI [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'XLAI'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2830,10 +2935,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! XLAI2 [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'XLAI2'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2849,10 +2956,12 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !------------------------------------------------------------------------
     ! XLAI_NATIVE [1]
     !------------------------------------------------------------------------
+    If (.not.Input_Opt%LTranPure) Then
     metId = 'XLAINATIVE'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2868,6 +2977,7 @@ CONTAINS
        CALL GC_Error( errMsg, RC, thisLoc )
        RETURN
     ENDIF
+    End If
 
     !========================================================================
     ! Allocate fields used by wet scavenging and other GeosCore modules.
