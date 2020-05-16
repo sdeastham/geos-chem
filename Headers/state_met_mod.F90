@@ -627,7 +627,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! CLDFRC [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'CLDFRC'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -647,7 +647,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! CLDTOPS [level]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'CLDTOPS'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -670,7 +670,7 @@ CONTAINS
     ! Convective fractions are not yet a standard GEOS-FP
     ! field. Only available to online model (ckeller, 3/4/16)
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'CNVFRC'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -691,7 +691,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! Convective Depth [m]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'CONVDEPTH'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -711,7 +711,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! EFLUX [W m-2]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'EFLUX'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -894,7 +894,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! GWETROOT [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'GWETROOT'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -914,7 +914,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! GWETTOP [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'GWETTOP'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -934,7 +934,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! HFLUX [W m-2]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'HFLUX'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -973,7 +973,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! IREG [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'IREG'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1069,7 +1069,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! LAI [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'LAI'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1107,7 +1107,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! MODISLAI [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'MODISLAI'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1127,7 +1127,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! PARDR [W m-2]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'PARDR'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1147,7 +1147,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! PARDF [W m-2]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'PARDF'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1257,7 +1257,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! PHIS [m2 s-2], converted to [m] after data read
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'PHIS'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1277,7 +1277,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! PRECANV [kg m-2 s-1], converted to [mm day-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'PRECANV'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1297,7 +1297,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! PRECCON [kg m-2 s-1], converted to [mm day-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'PRECCON'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1317,7 +1317,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! PRECLSC [kg m-2 s-1], converted to [mm day-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'PRECLSC'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1337,7 +1337,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! PRECTOT [kg m-2 s-1], converted to [mm day-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'PRECTOT'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1462,7 +1462,7 @@ CONTAINS
        RETURN
     ENDIF
 
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     !------------------------------------------------------------------------
     ! SEAICE00 [1]
     !------------------------------------------------------------------------
@@ -1665,7 +1665,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! SNODP [m]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'SNODP'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1685,7 +1685,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! SNOMAS [kg m-2]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'SNOMAS'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1705,7 +1705,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! SUNCOS [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'SUNCOS'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1725,7 +1725,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! SUNCOSmid [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'SUNCOSmid'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1745,7 +1745,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! SWGDN [W m-2]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'SWGDN'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1765,7 +1765,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! TO3 [dobsons]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'TO3'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1839,7 +1839,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! TS [K]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'TS'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1859,7 +1859,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! TSKIN [K]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'TSKIN'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1879,7 +1879,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! U10M [m s-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'U10M'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1899,7 +1899,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! USTAR [m -s]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'USTAR'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1919,7 +1919,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! UVALBEDO [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'UVALBEDO'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1939,7 +1939,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! V10M [m s-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'V10M'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -1959,7 +1959,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! Z0 [m]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'Z0'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2091,7 +2091,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! CLDF [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'CLDF'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2111,7 +2111,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! CMFMC [kg m-2 s-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'CMFMC'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2222,7 +2222,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! DQRCU [kg kg-1 s-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'DQRCU'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2242,7 +2242,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! DQRLSAN [kg kg-1 s-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'DQRLSAN '
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2262,7 +2262,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! DTRAIN [kg m-2 s-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'DTRAIN'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2282,7 +2282,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! ILAND [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'ILAND'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2303,7 +2303,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! IUSE [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'IUSE'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2324,7 +2324,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! LANDTYPEFRAC [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'LANDTYPEFRAC'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2363,7 +2363,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! OMEGA [Pa s-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'OMEGA'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2383,7 +2383,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! OPTD [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'OPTD'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2441,7 +2441,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! PFICU [kg m-2 s-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'PFICU'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2462,7 +2462,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! PFILSAN [kg m-2 s-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'PFILSAN'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2483,7 +2483,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! PFLCU [kg m-2 s-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'PFLCU'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2504,7 +2504,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! PFLLSAN [kg m-2 s-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'PFLLSAN'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2561,7 +2561,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! QI [kg kg-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'QI'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2581,7 +2581,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! QL [kg kg-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'QL'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2601,7 +2601,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! REEVAPCN [kg kg-1 s-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'REEVAPCN'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2621,7 +2621,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! REEVAPLS [kg kg-1 s-1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'REEVAPLS'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2749,7 +2749,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! TAUCLI [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'TAUCLI'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2769,7 +2769,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! TAUCLW [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'TAUCLW'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2919,7 +2919,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! XLAI [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'XLAI'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2940,7 +2940,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! XLAI2 [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'XLAI2'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &
@@ -2961,7 +2961,7 @@ CONTAINS
     !------------------------------------------------------------------------
     ! XLAI_NATIVE [1]
     !------------------------------------------------------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     metId = 'XLAINATIVE'
     CALL Init_and_Register(                                                  &
          Input_Opt  = Input_Opt,                                             &

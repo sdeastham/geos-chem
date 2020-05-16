@@ -28,7 +28,7 @@
   ! Two-dimensional fields
   !=========================================================================
 
-  If (.not.Input_Opt%LTranPure) Then
+  If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
      State_Met%CLDFRC              = CLDFRC                     ! 1
      State_Met%EFLUX               = EFLUX                      ! W m-2
      State_Met%HFLUX               = HFLUX                      ! W/m2
@@ -95,7 +95,7 @@
   ! Three-dimensional fields on level edges
   !=========================================================================
 
-  If (.not.Input_Opt%LTranPure) Then
+  If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
      ! kg/m2/s
      State_Met%CMFMC  (:,:,1:State_Grid%NZ+1) = CMFMC  (:,:,0:State_Grid%NZ)
      State_Met%PFICU  (:,:,1:State_Grid%NZ+1) = PFICU  (:,:,0:State_Grid%NZ)
@@ -116,7 +116,7 @@
   State_Met%PS1_DRY(:,:) = 0.0d0 
   State_Met%PS2_DRY(:,:) = 0.0d0
 
-  If (.not.Input_Opt%LTranPure) Then
+  If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
      ! Calculate CLDTOPS (highest location of CMFMC in the column)
      Do J=1,State_Grid%NY
      Do I=1,State_Grid%NX
@@ -159,7 +159,7 @@
   State_Met%T                   =(TMPU1+TMPU2)*0.5d0         ! K
 
   ! Create total optical depth field                         ! 1
-  If (.not.Input_Opt%LTranPure) Then
+  If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
      State_Met%OPTD                = State_Met%TAUCLI + State_Met%TAUCLW
 
      !=========================================================================
