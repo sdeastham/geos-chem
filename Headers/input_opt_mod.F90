@@ -77,6 +77,7 @@ MODULE Input_Opt_Mod
      LOGICAL                     :: ITS_A_TAGO3_SIM
      LOGICAL                     :: ITS_A_TAGCO_SIM
      LOGICAL                     :: ITS_AN_AEROSOL_SIM
+     LOGICAL                     :: ITS_AN_ADV_SIM
      LOGICAL                     :: LPRT
      LOGICAL                     :: useTimers
 
@@ -211,7 +212,6 @@ MODULE Input_Opt_Mod
      ! TRANSPORT MENU fields
      !----------------------------------------
      LOGICAL                     :: LTRAN
-     LOGICAL                     :: LTRANPURE
      LOGICAL                     :: LFILL
      INTEGER                     :: TPCORE_IORD
      INTEGER                     :: TPCORE_JORD
@@ -544,6 +544,7 @@ CONTAINS
     Input_Opt%ITS_A_TAGO3_SIM        = .FALSE.
     Input_Opt%ITS_A_TAGCO_SIM        = .FALSE.
     Input_Opt%ITS_AN_AEROSOL_SIM     = .FALSE.
+    Input_Opt%ITS_AN_ADV_SIM         = .FALSE.
     Input_Opt%LPRT                   = .FALSE.
     Input_Opt%useTimers              = .FALSE.
 
@@ -718,7 +719,6 @@ CONTAINS
     ! TRANSPORT MENU fields
     !----------------------------------------
     Input_Opt%LTRAN                  = .FALSE.
-    Input_Opt%LTRANPURE              = .FALSE.
     Input_Opt%LFILL                  = .FALSE.
     Input_Opt%TPCORE_IORD            = .FALSE.
     Input_Opt%TPCORE_JORD            = .FALSE.

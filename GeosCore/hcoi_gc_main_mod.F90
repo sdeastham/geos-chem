@@ -2509,6 +2509,7 @@ CONTAINS
     !-----------------------------------------------------------------
     IF ( Input_Opt%ITS_A_FULLCHEM_SIM   .or. &
          Input_Opt%ITS_AN_AEROSOL_SIM   .or. &
+         Input_Opt%ITS_AN_ADV_SIM       .or. &
          Input_OPt%ITS_A_CH4_SIM        .or. &
          Input_Opt%ITS_A_MERCURY_SIM    .or. &
          Input_Opt%ITS_A_POPS_SIM       .or. &

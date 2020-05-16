@@ -530,7 +530,7 @@ CONTAINS
     !-------------------------
     ! CLDFRC [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%CLDFRC( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%CLDFRC', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -543,7 +543,7 @@ CONTAINS
     !-------------------------
     ! CLDTOPS [level]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%CLDTOPS( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%CLDTOPS', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -559,7 +559,7 @@ CONTAINS
     !-------------------------
     ! CNV_FRC [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%CNV_FRC( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%CNV_FRC', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -573,7 +573,7 @@ CONTAINS
     !-------------------------
     ! Convective Depth [m]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%CONV_DEPTH( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%CONV_DEPTH', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -586,7 +586,7 @@ CONTAINS
     !-------------------------
     ! EFLUX [W m-2]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%EFLUX( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%EFLUX', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -687,7 +687,7 @@ CONTAINS
     !-------------------------
     ! GWETROOT [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%GWETROOT( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%GWETROOT', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -700,7 +700,7 @@ CONTAINS
     !-------------------------
     ! GWETTOP [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%GWETTOP( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%GWETTOP', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -713,7 +713,7 @@ CONTAINS
     !-------------------------
     ! HFLUX [W m-2]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%HFLUX( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%HFLUX', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -760,7 +760,7 @@ CONTAINS
     !-------------------------
     ! LAI [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%LAI( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%LAI', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -784,7 +784,7 @@ CONTAINS
     !-------------------------
     ! PARDR [W m-2]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%PARDR( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PARDR', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -797,7 +797,7 @@ CONTAINS
     !-------------------------
     ! PARDF [W m-2]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%PARDF( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PARDF', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -865,7 +865,7 @@ CONTAINS
     !-------------------------
     ! PHIS [m2 s-2]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%PHIS( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PHIS', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -878,7 +878,7 @@ CONTAINS
     !-------------------------
     ! PRECANV [kg m-2 s-1], converted to [mm day-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%PRECANV( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PRECANV', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -891,7 +891,7 @@ CONTAINS
     !-------------------------
     ! PRECCON [kg m-2 s-1], converted to [mm day-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%PRECCON( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PRECCON', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -904,7 +904,7 @@ CONTAINS
     !-------------------------
     ! PRECLSC [kg m-2 s-1], converted to [mm day-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%PRECLSC( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PRECLSC', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -917,7 +917,7 @@ CONTAINS
     !-------------------------
     ! PRECTOT [kg m-2 s-1], converted to [mm day-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%PRECTOT( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PRECTOT', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -996,7 +996,7 @@ CONTAINS
     !-------------------------
     ! SEAICE00 [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SEAICE00( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE00', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1009,7 +1009,7 @@ CONTAINS
     !-------------------------
     ! SEAICE10 [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SEAICE10( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE10', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1022,7 +1022,7 @@ CONTAINS
     !-------------------------
     ! SEAICE20 [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SEAICE20( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE20', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1035,7 +1035,7 @@ CONTAINS
     !-------------------------
     ! SEAICE30 [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SEAICE30( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE30', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1048,7 +1048,7 @@ CONTAINS
     !-------------------------
     ! SEAICE40 [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SEAICE40( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE40', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1061,7 +1061,7 @@ CONTAINS
     !-------------------------
     ! SEAICE50 [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SEAICE50( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE50', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1074,7 +1074,7 @@ CONTAINS
     !-------------------------
     ! SEAICE60 [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SEAICE60( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE60', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1087,7 +1087,7 @@ CONTAINS
     !-------------------------
     ! SEAICE70 [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SEAICE70( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE70', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1100,7 +1100,7 @@ CONTAINS
     !-------------------------
     ! SEAICE80 [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SEAICE80( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE80', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1113,7 +1113,7 @@ CONTAINS
     !-------------------------
     ! SEAICE90 [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SEAICE90( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SEAICE90', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1137,7 +1137,7 @@ CONTAINS
     !-------------------------
     ! SNODP [m]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SNODP( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SNODP', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1150,7 +1150,7 @@ CONTAINS
     !-------------------------
     ! SNOMAS [kg m-2]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SNOMAS( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SNOMAS', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1163,7 +1163,7 @@ CONTAINS
     !-------------------------
     ! SUNCOS [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SUNCOS( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SUNCOS', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1176,7 +1176,7 @@ CONTAINS
     !-------------------------
     ! SUNCOSmid [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SUNCOSmid( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SUNCOSmid', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1189,7 +1189,7 @@ CONTAINS
     !-------------------------
     ! SWGDN [W m-2]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%SWGDN( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%SWGDN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1202,7 +1202,7 @@ CONTAINS
     !-------------------------
     ! TO3 [dobsons]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%TO3( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%TO3', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1248,7 +1248,7 @@ CONTAINS
     !-------------------------
     ! TS [K]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%TS( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%TS', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1261,7 +1261,7 @@ CONTAINS
     !-------------------------
     ! TSKIN [K]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%TSKIN( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%TSKIN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1274,7 +1274,7 @@ CONTAINS
     !-------------------------
     ! U10M [m s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%U10M( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%U10M', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1287,7 +1287,7 @@ CONTAINS
     !-------------------------
     ! USTAR [m -s]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%USTAR( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%USTAR', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1300,7 +1300,7 @@ CONTAINS
     !-------------------------
     ! UVALBEDO [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%UVALBEDO( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%UVALBEDO', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1313,7 +1313,7 @@ CONTAINS
     !-------------------------
     ! V10M [m s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%V10M( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%V10M', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1326,7 +1326,7 @@ CONTAINS
     !-------------------------
     ! Z0 [m]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%Z0( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%Z0', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1420,7 +1420,7 @@ CONTAINS
     !-------------------------
     ! CLDF [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%CLDF( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%CLDF', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1433,7 +1433,7 @@ CONTAINS
     !-------------------------
     ! CMFMC [kg m-2 s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%CMFMC( IM, JM, LM+1 ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%CMFMC', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1513,7 +1513,7 @@ CONTAINS
     !-------------------------
     ! DQRCU [kg kg-1 s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%DQRCU( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%DQRCU', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1526,7 +1526,7 @@ CONTAINS
     !-------------------------
     ! DQRLSAN [kg kg-1 s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%DQRLSAN( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%DQRLSAN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1539,7 +1539,7 @@ CONTAINS
     !-------------------------
     ! DTRAIN [kg m-2 s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%DTRAIN( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%DTRAIN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1552,7 +1552,7 @@ CONTAINS
     !-------------------------
     ! OMEGA [Pa s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%OMEGA( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%OMEGA', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1565,7 +1565,7 @@ CONTAINS
     !-------------------------
     ! OPTD [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%OPTD( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%OPTD', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1622,7 +1622,7 @@ CONTAINS
     !-------------------------
     ! QI [kg kg-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%QI( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%QI', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1635,7 +1635,7 @@ CONTAINS
     !-------------------------
     ! QL [kg kg-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%QL( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%QL', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1703,7 +1703,7 @@ CONTAINS
     !-------------------------
     ! TAUCLI [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%TAUCLI( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%TAUCLI', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1716,7 +1716,7 @@ CONTAINS
     !-------------------------
     ! TAUCLW [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%TAUCLW( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%TAUCLW', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1754,7 +1754,7 @@ CONTAINS
     !-------------------------
     ! UPDVVEL [hPa s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%UPDVVEL( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%UPDVVEL', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1771,7 +1771,7 @@ CONTAINS
     !-------------------------
     ! PFICU [kg m-2 s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%PFICU( IM, JM, LX ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PFICU', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1784,7 +1784,7 @@ CONTAINS
     !-------------------------
     ! PFILSAN [kg m-2 s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%PFILSAN( IM, JM, LX ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PFILSAN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1797,7 +1797,7 @@ CONTAINS
     !-------------------------
     ! PFLCU [kg m-2 s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%PFLCU( IM, JM, LX ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PFLCU', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1810,7 +1810,7 @@ CONTAINS
     !-------------------------
     ! PFLLSAN [kg m-2 s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%PFLLSAN( IM, JM, LX ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%PFLLSAN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1823,7 +1823,7 @@ CONTAINS
     !-------------------------
     ! REEVAPCN [kg kg-1 s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%REEVAPCN( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%REEVAPCN', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1836,7 +1836,7 @@ CONTAINS
     !-------------------------
     ! REEVAPLS [kg kg-1 s-1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%REEVAPLS( IM, JM, LM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%REEVAPLS', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1908,7 +1908,7 @@ CONTAINS
     !-------------------------
     ! IREG [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%IREG( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%IREG', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1921,7 +1921,7 @@ CONTAINS
     !-------------------------
     ! ILAND [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%ILAND( IM, JM, NSURFTYPE ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%ILAND', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1934,7 +1934,7 @@ CONTAINS
     !-------------------------
     ! IUSE [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%IUSE( IM, JM, NSURFTYPE ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%IUSE', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1947,7 +1947,7 @@ CONTAINS
     !-------------------------
     ! XLAI [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%XLAI( IM, JM, NSURFTYPE ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%XLAI', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1960,7 +1960,7 @@ CONTAINS
     !-------------------------
     ! MODISLAI [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%MODISLAI( IM, JM ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%MODISLAI', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1973,7 +1973,7 @@ CONTAINS
     !-------------------------
     ! XLAI2 [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%XLAI2( IM, JM, NSURFTYPE ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%XLAI2', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1986,7 +1986,7 @@ CONTAINS
     !-------------------------
     ! LANDTYPEFRAC [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%LANDTYPEFRAC( IM, JM, NSURFTYPE ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%LANDTYPEFRAC', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
@@ -1999,7 +1999,7 @@ CONTAINS
     !-------------------------
     ! XLAI_NATIVE [1]
     !-------------------------
-    If (.not.Input_Opt%LTranPure) Then
+    If (.not.Input_Opt%ITS_AN_ADV_SIM) Then
     ALLOCATE( State_Met%XLAI_NATIVE( IM, JM, NSURFTYPE ), STAT=RC )
     CALL GC_CheckVar( 'State_Met%XLAI_NATIVE', 0, RC )
     IF ( RC /= GC_SUCCESS ) RETURN

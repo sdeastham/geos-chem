@@ -236,7 +236,7 @@ CONTAINS
     _ASSERT(RC==GC_SUCCESS, 'Error calling INIT_PBL_MIX')
 
     ! Initialize chemistry mechanism
-    IF ( Input_Opt%ITS_A_FULLCHEM_SIM .OR. Input_Opt%ITS_AN_AEROSOL_SIM ) THEN
+    IF ( (.not. Input_Opt%ITS_AN_ADV_SIM) .and. (Input_Opt%ITS_A_FULLCHEM_SIM .OR. Input_Opt%ITS_AN_AEROSOL_SIM) ) THEN
        CALL INIT_CHEMISTRY ( Input_Opt,  State_Chm, State_Diag, &
                              State_Grid, RC )
        _ASSERT(RC==GC_SUCCESS, 'Error calling INIT_CHEMISTRY')
@@ -564,7 +564,7 @@ CONTAINS
        write(*,*) ' '
     ENDIF
 
-    If (Input_Opt%LTranPure.and. &
+    If (Input_Opt%ITS_AN_ADV_SIM.and. &
              (Input_Opt%LTURB   .or. &
               Input_Opt%LCONV   .or. &
               Input_Opt%LCHEM   .or. &
@@ -599,7 +599,7 @@ CONTAINS
     ! Set HEMCO time
     CALL SetHcoTime ( DoEmis, RC )
 
-    If (.not. Input_Opt%LTranPure) Then
+    If (.not. Input_Opt%ITS_AN_ADV_SIM) Then
        ! Calculate MODIS leaf area indexes needed for dry deposition
        CALL Compute_XLAI( Input_Opt, State_Grid, State_Met, RC )
     End If

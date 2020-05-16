@@ -715,6 +715,7 @@ CONTAINS
          TRIM(Sim) /= 'POPS'             .and. &
          TRIM(Sim) /= 'RRTMG'            .and. &
          TRIM(Sim) /= 'STANDARD'         .and. &
+         TRIM(Sim) /= 'ADVECTION'        .and. &
          TRIM(Sim) /= 'TRANSPORTTRACERS' .and. &
          TRIM(Sim) /= 'TROPCHEM'         .and. &
          TRIM(Sim) /= 'TAGCO'            .and. &
@@ -729,7 +730,7 @@ CONTAINS
                 ' valid simulation. Supported simulations are:'     // &
                 ' AcidUptake, Aerosol, APM, Benchmark, CH4, CO2,'   // &
                 ' ComplexSOA, ComplexSOA_SVPOA, HEMCO, Hg,'         // &
-                ' MarinePOA, POPs, RRTMG, Standard,'                // &
+                ' MarinePOA, POPs, RRTMG, Standard, Advection,'     // &
                 ' TransportTracers, Tropchem, TagCO, TagCH4, TagHg,'// &
                 ' TagO3, TOMAS12, TOMAS15, TOMAS30, and TOMAS40.'
        CALL GC_Error( ErrMsg, RC, ThisLoc )
@@ -760,6 +761,7 @@ CONTAINS
     Input_Opt%ITS_A_RnPbBe_SIM   = ( TRIM(Sim) == 'TRANSPORTTRACERS' )
     Input_Opt%ITS_A_TAGO3_SIM    = ( TRIM(Sim) == 'TAGO3'            )
     Input_Opt%ITS_A_TAGCO_SIM    = ( TRIM(Sim) == 'TAGCO'            )
+    Input_Opt%ITS_AN_ADV_SIM     = ( TRIM(Sim) == 'ADVECTION'        )
     Input_Opt%ITS_AN_AEROSOL_SIM = ( TRIM(Sim) == 'AEROSOL'          )
 
     !-----------------------------------------------------------------
@@ -2857,14 +2859,6 @@ CONTAINS
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%LTRAN
 
-    ! Go for "pure transport" mode?
-    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LTRANPURE', RC )
-    IF ( RC /= GC_SUCCESS ) THEN
-       CALL GC_Error( ErrMsg, RC, ThisLoc )
-       RETURN
-    ENDIF
-    READ( SUBSTRS(1:N), * ) Input_Opt%LTRANPURE
-
     ! Fill negative values
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LFILL', RC )
     IF ( RC /= GC_SUCCESS ) THEN
@@ -2898,8 +2892,6 @@ CONTAINS
        WRITE( 6, '(  a)' ) '--------------'
        WRITE( 6, 100     ) 'Turn on transport?          : ', &
                             Input_Opt%LTRAN
-       WRITE( 6, 100     ) '  --> Transport ONLY?       : ', &
-                            Input_Opt%LTRANPURE
        WRITE( 6, 100     ) 'Let TPCORE Fill negatives?  : ', &
                             Input_Opt%LFILL
        WRITE( 6, 110     ) 'IORD, JORD, KORD for TPCORE?: ', &
