@@ -257,7 +257,7 @@ CONTAINS
     _ASSERT(RC==GC_SUCCESS, 'Error calling EMISSIONS_INIT')
 
     ! Stratosphere - can't be initialized without HEMCO because of STATE_PSC
-    IF ( Input_Opt%LUCX ) THEN
+    IF ( (.not. Input_Opt%ITS_AN_ADV_SIM) .and. Input_Opt%LUCX ) THEN
 
        ! Initialize stratospheric routines
        CALL INIT_UCX( Input_Opt, State_Chm, State_Diag, State_Grid )
