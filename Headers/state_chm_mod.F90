@@ -871,6 +871,7 @@ CONTAINS
     !=======================================================================
     ! Allocate and initialize boundary condition fields
     !=======================================================================
+    If (.not. Input_Opt%ITS_AN_ADV_SIM) Then
     chmID = 'BoundaryCond'
     ALLOCATE( State_Chm%BoundaryCond( IM, JM, LM, State_Chm%nSpecies ), STAT=RC)
     CALL GC_CheckVar( 'State_Chm%BoundaryCond', 0, RC )
@@ -880,6 +881,7 @@ CONTAINS
                             State_Chm, RC )
     CALL GC_CheckVar( 'State_Chm%BoundaryCond', 1, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
 
 #if defined( MODEL_GEOS )
     !=======================================================================
@@ -1442,6 +1444,7 @@ CONTAINS
     ! Allocate and initialize quantities for wet deposition routines
     !=======================================================================
 
+    If (.not. Input_Opt%ITS_AN_ADV_SIM) Then
     !------------------------------------------------------------------
     ! H2O2AfterChem
     !------------------------------------------------------------------
@@ -1467,6 +1470,8 @@ CONTAINS
                             State_Chm, RC                                )
     CALL GC_CheckVar( 'State_Chm%SO2AfterChem', 1, RC )
     IF ( RC /= GC_SUCCESS ) RETURN
+    End If
+    
 
     !=======================================================================
     ! Allocate and initialize fields for KPP solver
