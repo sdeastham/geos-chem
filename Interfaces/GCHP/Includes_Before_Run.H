@@ -88,8 +88,6 @@
   State_Met%PS2_WET             = PS2                        ! hPa
   State_Met%TMPU1               = TMPU1
   State_Met%TMPU2               = TMPU2
-  State_Met%U                   = ULL                        ! m/s
-  State_Met%V                   = VLL                        ! m/s
 
   !=========================================================================
   ! Three-dimensional fields on level edges
@@ -152,11 +150,20 @@
 
   ! These fields are set to match the GCC conventions and to ensure that 
   ! transport is correctly implemented.
-  State_Met%RH                  = RH      * 1d2              ! 1 -> %
-  State_Met%SPHU                =(SPHU1+SPHU2)*0.5d3         ! kg/kg -> g/kg
-  State_Met%SPHU1               = SPHU1       *1.0d3         ! kg/kg -> g/kg
-  State_Met%SPHU2               = SPHU2       *1.0d3         ! kg/kg -> g/kg
-  State_Met%T                   =(TMPU1+TMPU2)*0.5d0         ! K
+  State_Met%RH                  = RH          * 1d2          ! 1 -> %
+  if (flip_vertical) then
+     State_Met%U                   = ULL  (:,:,State_Grid%NZ:1:-1)         ! m/s
+     State_Met%V                   = VLL  (:,:,State_Grid%NZ:1:-1)         ! m/s
+     State_Met%SPHU1               = SPHU1(:,:,State_Grid%NZ:1:-1)*1.0d3   ! kg/kg -> g/kg
+     State_Met%SPHU2               = SPHU2(:,:,State_Grid%NZ:1:-1)*1.0d3   ! kg/kg -> g/kg
+  else
+     State_Met%U                   = ULL                        ! m/s
+     State_Met%V                   = VLL                        ! m/s
+     State_Met%SPHU1               = SPHU1       *1.0d3         ! kg/kg -> g/kg
+     State_Met%SPHU2               = SPHU2       *1.0d3         ! kg/kg -> g/kg
+  end if
+  State_Met%SPHU                =(State_Met%SPHU1+State_Met%SPHU2)*0.5d0         ! kg/kg -> g/kg
+  State_Met%T                   =(State_Met%TMPU1+State_Met%TMPU2)*0.5d0         ! K
 
   ! Create total optical depth field                         ! 1
   If (.not.Input_Opt%ITS_AN_ADV_SIM) Then

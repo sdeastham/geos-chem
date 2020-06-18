@@ -156,6 +156,7 @@ MODULE Chem_GridCompMod
 #else
   LOGICAL                          :: isProvider ! provider to AERO, RATS, ANOX?
   LOGICAL                          :: calcOzone  ! if PTR_GCCTO3 is associated
+  LOGICAL                          :: flip_vertical ! Flip met fields
 #endif
 
   ! Number of run phases, 1 or 2. Set in the rc file; else default is 2.
@@ -505,6 +506,7 @@ CONTAINS
     CHARACTER(LEN=127)            :: FullName, Formula 
     LOGICAL                       :: FriendDyn, FriendTurb
 #endif
+    integer                       :: opt_int
 
     __Iam__('SetServices')
 
@@ -663,6 +665,12 @@ CONTAINS
        restartAttr = MAPL_RestartOptional    ! try to read species from file;
                                              ! use background vals if not found
     ENDIF
+
+    ! Are we flipping met fields?
+    CALL ESMF_ConfigGetAttribute( myState%myCF, opt_int, &
+                                  Label = "FLIP_MET:",&
+                                  __RC__ ) 
+    flip_vertical = (opt_int>0)
 #endif
 
 !-- Read in species from input.geos and set FRIENDLYTO
