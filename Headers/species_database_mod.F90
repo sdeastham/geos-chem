@@ -4455,6 +4455,46 @@ CONTAINS
              WD_KcScaleFac = KcScale
              WD_RainoutEff = RainEff
 
+          CASE( 'SF6' ) 
+             FullName      = 'Sulfur hexaflouride'
+             Formula       = 'SF6'
+             MW_g          = 146.0_fp
+             Is_Gas        = T
+             Is_Drydep     = F
+             Is_Wetdep     = F
+
+          CASE( 'AOA' ) 
+             FullName      = 'Age of air'
+             Formula       = 'AOA'
+             MW_g          = 1.0_fp
+             Is_Gas        = T
+             Is_Drydep     = F
+             Is_Wetdep     = F
+
+          CASE( 'E90' ) 
+             FullName      = 'Constant emission 90 day tracer'
+             Formula       = 'NA'
+             MW_g          = 1.0_fp
+             Is_Gas        = T
+             Is_Drydep     = F
+             Is_Wetdep     = F
+
+          CASE( 'ST80_25' )
+             FullName      = 'Stratosphere source 25 day tracer'
+             Formula       = 'NA'
+             MW_g          = 1.0_fp
+             Is_Gas        = T
+             Is_Drydep     = F
+             Is_Wetdep     = F
+
+          CASE( 'CO_50_NA' )
+             FullName      = 'Anthropogenic CO North America 50 day tracer'
+             Formula       = 'NA'
+             MW_g          = 28.0_fp
+             Is_Gas        = T
+             Is_Drydep     = F
+             Is_Wetdep     = F
+
           !==================================================================
           ! Species for the Hg specialty simulation
           !==================================================================
