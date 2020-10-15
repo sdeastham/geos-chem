@@ -2362,10 +2362,7 @@ CONTAINS
                         //TRIM(Int2Spc(I)%Name),I
           ENDIF
           Int2Spc(I)%Internal => NULL()
-#if defined( MODEL_GEOS )
           CYCLE
-          _ASSERT(.FALSE.,'Error finding internal state variable')
-#endif
        ENDIF
 
 #if defined( MODEL_GEOS )
