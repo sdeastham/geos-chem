@@ -2452,14 +2452,12 @@ CONTAINS
              WRITE(*,*) 'Cannot find in internal state: ', TRIM(SPFX) &
 #if defined( MODEL_GEOS )
                         //TRIM(Int2Spc(I)%Name),I
+#else
+                        //TRIM(Int2Spc(I)%TrcName),I
+#endif
           ENDIF
           Int2Spc(I)%Internal => NULL()
           CYCLE
-#else
-                        //TRIM(Int2Spc(I)%TrcName),I
-          ENDIF
-          _ASSERT(.FALSE.,'Error finding internal state variable')
-#endif
        ENDIF
 
 #if defined( MODEL_GEOS )
