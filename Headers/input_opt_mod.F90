@@ -179,6 +179,7 @@ MODULE Input_Opt_Mod
      INTEGER                     :: TS_CHEM
      REAL(fp)                    :: GAMMA_HO2
      LOGICAL                     :: LUCX
+     LOGICAL                     :: LUCXMINI
      LOGICAL                     :: LACTIVEH2O
      LOGICAL                     :: LINITSPEC
      LOGICAL                     :: USE_ONLINE_O3
@@ -666,6 +667,7 @@ CONTAINS
     Input_Opt%TS_CHEM                = 0
     Input_Opt%GAMMA_HO2              = 0e+0_fp
     Input_Opt%LUCX                   = .FALSE.
+    Input_Opt%LUCXMINI               = .FALSE.
     Input_Opt%LACTIVEH2O             = .FALSE.
     Input_Opt%LINITSPEC              = .FALSE.
     Input_Opt%USE_ONLINE_O3          = .FALSE.

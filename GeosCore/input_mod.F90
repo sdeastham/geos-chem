@@ -2421,6 +2421,14 @@ CONTAINS
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%LUCX
 
+    ! Use simplified stratospheric chemistry?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LUCXMINI', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%LUCXMINI
+
     ! Turn on online stratospheric H2O?
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'LACTIVEH2O', RC )
     IF ( RC /= GC_SUCCESS ) THEN
@@ -2497,6 +2505,13 @@ CONTAINS
        RETURN
     ENDIF
 
+    ! Need LUCX to have LUCXMINI
+    If (Input_Opt%LUCXMini .and. (.not.Input_Opt%LUCX)) Then
+       ErrMsg = 'Need UCX enabled to use fast stratospheric chemistry!'
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    End IF
+
     ! FAST-JX is only used for fullchem and offline aerosol
     IF ( Input_Opt%ITS_A_FULLCHEM_SIM  .or. &
          Input_Opt%ITS_AN_AEROSOL_SIM  ) THEN
@@ -2552,6 +2567,8 @@ CONTAINS
                             Input_Opt%LLINOZ
        WRITE( 6, 100     ) 'Enable UCX?                 : ', &
                             Input_Opt%LUCX
+       WRITE( 6, 100     ) ' --> Simplified?            : ', &
+                            Input_Opt%LUCXMINI
        WRITE( 6, 100     ) 'Online strat. H2O?          : ', &
                             Input_Opt%LACTIVEH2O
        WRITE( 6, 100     ) 'Online ozone for FAST-JX?   : ', &

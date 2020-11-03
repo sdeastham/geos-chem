@@ -602,7 +602,7 @@ CONTAINS
 
        ELSE
 
-          IF ( Input_Opt%LUCX ) THEN
+          IF ( (.not.Input_Opt%LUCXMINI).and.Input_Opt%LUCX ) THEN
 
              ! UCX mechanisms: Chemistry grid goes up to stratopause
              State_Met%InChemGrid(I,J,L) = ( L <= State_Grid%MaxChemLev )

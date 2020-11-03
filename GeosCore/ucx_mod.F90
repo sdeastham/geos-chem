@@ -1834,6 +1834,7 @@ CONTAINS
     LOGICAL                 :: LHOMNUCNAT
     LOGICAL                 :: LSOLIDPSC
     LOGICAL                 :: LACTIVEH2O
+    LOGICAL                 :: LUCXMINI
 
     ! Local variables for quantities from species database
     REAL(fp)                :: NIT_MW_G, HNO3_MW_G, H2O_MW_G
@@ -1854,6 +1855,7 @@ CONTAINS
     LHOMNUCNAT  = Input_Opt%LHOMNUCNAT
     LSOLIDPSC   = Input_Opt%LSOLIDPSC
     LACTIVEH2O  = Input_Opt%LACTIVEH2O
+    LUCXMINI    = Input_Opt%LUCXMINI
 
     ! Do we have to print debug output?
     prtDebug = ( Input_Opt%LPRT .and. Input_Opt%amIRoot )
@@ -1878,6 +1880,34 @@ CONTAINS
 
     ! Partition H2SO4 before proceeding
     CALL CALC_H2SO4_GAS( Input_Opt, State_Chm, State_Grid, State_Met )
+
+    ! If using fast stratosphere, skip all this
+    If (LUCXMini) Then
+       ! Store standard values
+       RAD_AER  (:,:,:,:) =    0.5e-4_fp ! 0.5 um, in cm
+       RHO_AER  (:,:,:,:) = 1000.0e+0_fp ! kg/m3
+       KG_AER   (:,:,:,:) =    0.0e+0_fp ! kg 
+       NDENS_AER(:,:,:,:) =    0.5e+0_fp ! #/m3
+       SAD_AER  (:,:,:,:) =    0.0e+0_fp ! cm2/cm3
+
+       ! Now the secondary fields
+       State_PSC(:,:,:  ) =    0
+       KHetI_SLA(:,:,:,:) =    0.0e+0_fp ! Rates
+       ! Keep sulfate partitioned
+       Do K=2,7
+          AERFRAC  (:,:,:,K) = 0.0e+0_fp ! Phases
+       End Do
+
+       ! Free pointers
+       NULLIFY( Spc, STATE_PSC, KHETI_SLA )
+
+       If ( prtDebug ) Then
+          Call Debug_Msg( '### UCX: skipped CALC_STRAT_AER' )
+       End If
+
+       ! Skip the rest
+       Return
+    End If
 
     ! Loop over latitude boxes first
     !$OMP PARALLEL DO       &
@@ -4353,7 +4383,7 @@ CONTAINS
 
     ! Local variables for quantities from Input_Opt
     LOGICAL            :: prtDebug
-    LOGICAL            :: LUCX
+    LOGICAL            :: LUCX, LUCXMINI
 
     ! Strings
     CHARACTER(LEN=255) :: DBGMSG, GRIDSPEC, FileMsg, FileName
@@ -4368,6 +4398,7 @@ CONTAINS
     ! Copy fields from INPUT_OPT
     prtDebug = ( Input_Opt%LPRT .and. Input_Opt%amIRoot )
     LUCX     = Input_Opt%LUCX
+    LUCXMINI = Input_Opt%LUCXMINI
 
     ! Initialize species ID flags
     id_BCPI  = Ind_('BCPI'      )
@@ -4396,6 +4427,19 @@ CONTAINS
        WRITE( 6,'(a)') 'Routines written by SEBASTIAN D. EASTHAM'
        WRITE( 6,'(a)') REPEAT( '=', 79 )
     ENDIF
+
+    ! Error checking
+    IF (LUCXMini) Then
+       If (Input_Opt%LGravStrat) Then
+          Call Error_Stop('No settling with UCX mini','ucx_mod.F90')
+       End If
+       If (Input_Opt%LSolidPSC) Then
+          Call Error_Stop('No solid PSCs in UCX mini','ucx_mod.F90')
+       End If
+       If (Input_Opt%LHomNucNAT) Then
+          Call Error_Stop('No hom. NAT nuc. in UCX mini','ucx_mod.F90')
+       End If
+    End If
 
     ! --------------------------------------------------------------
     ! Input data sources
