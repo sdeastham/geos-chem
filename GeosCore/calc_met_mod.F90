@@ -590,6 +590,10 @@ CONTAINS
        State_Met%InStratosphere(I,J,L) = &
             ( L <= State_Grid%MaxStratLev .and. State_Met%InStratMeso(I,J,L) )
 
+       ! Is this grid box within the mesosphere?
+       State_Met%InMesosphere(I,J,L) = &
+            ( (.not.State_Met%InStratosphere(I,J,L)) .and. State_Met%InStratMeso(I,J,L) )
+
        ! Is grid box (I,J,L) within the chemistry grid?
        IF ( L > State_Grid%MaxChemLev ) THEN
 

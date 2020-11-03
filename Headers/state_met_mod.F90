@@ -247,6 +247,7 @@ MODULE State_Met_Mod
      LOGICAL,  POINTER :: InStratMeso   (:,:,:) ! Are we in the stratosphere
                                                 !            or mesosphere?
      LOGICAL,  POINTER :: InStratosphere(:,:,:) ! Are we in the stratosphere?
+     LOGICAL,  POINTER :: InMesosphere  (:,:,:) ! Are we in the mesosphere?
      LOGICAL,  POINTER :: InTroposphere (:,:,:) ! Are we in the troposphere?
      REAL(fp), POINTER :: LocalSolarTime(:,:  ) ! Local solar time
      LOGICAL,  POINTER :: IsLocalNoon   (:,:  ) ! Is it local noon (between 11
@@ -474,6 +475,7 @@ CONTAINS
     State_Met%InPbl          => NULL()
     State_Met%InStratMeso    => NULL()
     State_Met%InStratosphere => NULL()
+    State_Met%InMesosphere   => NULL()
     State_Met%InTroposphere  => NULL()
     State_Met%IsLocalNoon    => NULL()
     State_Met%LocalSolarTime => NULL()
@@ -1909,6 +1911,14 @@ CONTAINS
     State_Met%InStratosphere = .FALSE.
 
     !-------------------------
+    ! InMesosphere
+    !-------------------------
+    ALLOCATE( State_Met%InMesosphere( IM, JM, LM ), STAT=RC )
+    CALL GC_CheckVar( 'State_Met%InMesosphere', 0, RC )
+    IF ( RC /= GC_SUCCESS ) RETURN
+    State_Met%InStratosphere = .FALSE.
+
+    !-------------------------
     ! InStratMeso
     !-------------------------
     ALLOCATE( State_Met%InStratMeso( IM, JM, LM ), STAT=RC )
@@ -3098,6 +3108,13 @@ CONTAINS
        CALL GC_CheckVar( 'State_Met%InStratosphere', 2, RC )
        IF ( RC /= GC_SUCCESS ) RETURN
        State_Met%InStratosphere => NULL()
+    ENDIF
+
+    IF ( ASSOCIATED( State_Met%InMesosphere ) ) THEN
+       DEALLOCATE( State_Met%InMesosphere, STAT=RC )
+       CALL GC_CheckVar( 'State_Met%InMesosphere', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+       State_Met%InMesosphere => NULL()
     ENDIF
 
     IF ( ASSOCIATED( State_Met%InTroposphere ) ) THEN
