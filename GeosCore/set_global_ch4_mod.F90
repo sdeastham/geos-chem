@@ -122,6 +122,7 @@ CONTAINS
 
     ! SAVEd variables
     LOGICAL, SAVE       :: FIRST = .TRUE.
+    LOGICAL, SAVE       :: BYPASS = .TRUE.
     INTEGER, SAVE       :: id_CH4
 
     !=================================================================
@@ -143,8 +144,15 @@ CONTAINS
        ! Get species ID
        id_CH4 = Ind_( 'CH4' )
 
-       ! Use the NOAA spatially resolved data where available
-       CALL HCO_GetPtr( HcoState, 'NOAA_GMD_CH4', SFC_CH4, RC, FOUND=FOUND )
+       ! CH4 surface VMR handled through standard field
+       CALL HCO_GetPtr( HcoState, 'SfcVMR_CH4', SFC_CH4, RC, FOUND=FOUND )
+       ! If SfcVMR_CH4 is set, then all CH4 fluxes will be handled by sfcvmr_mod
+       BYPASS = FOUND
+       IF (.NOT. FOUND ) THEN
+          FOUND = .TRUE.
+          ! Use the NOAA spatially resolved data where available
+          CALL HCO_GetPtr( HcoState, 'NOAA_GMD_CH4', SFC_CH4, RC, FOUND=FOUND )
+       ENDIF
        IF (.NOT. FOUND ) THEN
           FOUND = .TRUE.
           ! Use the CMIP6 data from Meinshausen et al. 2017, GMD
@@ -152,10 +160,8 @@ CONTAINS
           CALL HCO_GetPtr( HcoState, 'CMIP6_Sfc_CH4', SFC_CH4, RC, FOUND=FOUND )
        ENDIF
        IF (.NOT. FOUND ) THEN
-          ErrMsg = 'Cannot get pointer to NOAA_GMD_CH4 or CMIP6_Sfc_CH4 ' // &
-                   'in SET_CH4! Make sure the data source corresponds '   // &
-                   'to your emissions year in HEMCO_Config.rc (NOAA GMD ' // &
-                   'for 1978 and later; else CMIP6).'
+          ErrMsg = 'Cannot get pointer to NOAA_GMD_CH4, CMIP6_Sfc_CH4,  ' // &
+                   'or SfcVMR_CH4 in SET_CH4! One of these must be used.'
           CALL GC_Error( ErrMsg, RC, ThisLoc )
           RETURN
        ENDIF
@@ -164,6 +170,11 @@ CONTAINS
        FIRST = .FALSE.
 
     ENDIF
+
+    ! Stop and return to caller if we bypass this module
+    If (BYPASS) THEN
+       RETURN
+    END IF
 
     ! Convert species to [v/v dry] for this routine
     CALL Convert_Spc_Units( Input_Opt, State_Chm, State_Grid, State_Met, &
