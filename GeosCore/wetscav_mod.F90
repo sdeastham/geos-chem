@@ -3938,8 +3938,13 @@ CONTAINS
 
           ! Define ALPHA, the fraction of the raindrops that
           ! re-evaporate when falling from (I,J,L+1) to (I,J,L)
-          ALPHA = ( ABS( Q ) * State_Met%BXHEIGHT(I,J,L) * 100e+0_fp ) &
-                  / ( PDOWN(L+1,I,J) )
+          ! SDE 2020-10-08: Allow for PDOWN to reach zero
+          If (PDOWN(L+1,I,J).le.TINY(0.0e+0_fp)) Then
+              ALPHA = 1.0e+0_fp
+          Else
+              ALPHA = ( ABS( Q ) * State_Met%BXHEIGHT(I,J,L) * 100e+0_fp ) &
+                      / ( PDOWN(L+1,I,J) )
+          End If
 
           ! Restrict ALPHA to be less than 1 (>1 is unphysical)
           ! (hma, 24-Dec-2010)
