@@ -2079,8 +2079,8 @@ MODULE GCKPP_HETRATES
 !\\
 ! !INTERFACE:
 !
-    FUNCTION N2O5_InorgOrg( volInorg, volOrg, H2Oinorg, H2Oorg, Rcore, &
-                            NIT,      Cl,     T,        RH ) &
+    FUNCTION N2O5_InorgOrg( volInorg, volOrg, H2Oinorg_in, H2Oorg_in, Rcore, &
+                            NIT,      Cl,     T,           RH ) &
          RESULT ( output )
 !
 ! !USES:
@@ -2093,10 +2093,10 @@ MODULE GCKPP_HETRATES
                                        !  [cm3(aerosol)/cm3(air)]
       real(fp), intent(in) :: volOrg   ! volume of wet organic aerosol coating
                                        !  [cm3(aerosol)/cm3(air)]
-      real(fp), intent(in) :: H2Oinorg ! volume of H2O in inorganic core
-                                       !  [cm3(H2O)/cm3(air)]
-      real(fp), intent(in) :: H2Oorg   ! volume of H2O in organic coating
-                                       !  [cm3(H2O)/cm3(air)]
+      real(fp), intent(in) :: H2Oinorg_in ! volume of H2O in inorganic core
+                                          !  [cm3(H2O)/cm3(air)]
+      real(fp), intent(in) :: H2Oorg_in   ! volume of H2O in organic coating
+                                          !  [cm3(H2O)/cm3(air)]
       real(fp), intent(in) :: Rcore    ! radius of inorganic core [cm]
       real(fp), intent(in) :: NIT      ! aerosol nitrate concentration
                                        !  [molecule/cm3(air)
@@ -2147,10 +2147,17 @@ MODULE GCKPP_HETRATES
       real(fp) :: volTotal, H2Ototal, areaTotal, volRatioDry
       real(fp) :: Rp, l, eps, OCratio
       real(fp) :: M_H2O, M_NIT, M_Cl, ClNO2_yield
+      real(fp) :: H2OInorg, H2Oorg
 
       !------------------------------------------------------------------------
       ! Particle size & volume, coating thickness, molar concentrations
       !------------------------------------------------------------------------
+
+      ! Some ugly code in aerosol_mod.F90, which gets fixed later, can result
+      ! in H2O volume > aerosol volume. When this happens, artificially decrease
+      ! H2O volume.
+      H2OInorg = Min(H2OInorg_in, volInorg)
+      H2Oorg   = Min(H2Oorg_in, volOrg)
 
       ! Total volume (organic + inorganic), cm3(aerosol)/cm3(air)
       volTotal = volInorg + volOrg
