@@ -61,10 +61,8 @@ CONTAINS
     USE State_Grid_Mod,    ONLY : GrdState
     USE State_Met_Mod,     ONLY : MetState
     USE UnitConv_Mod,      ONLY : Convert_Spc_Units
-#if defined( MODEL_GEOS )
     USE PhysConstants,     ONLY : AIRMW
     USE TIME_MOD,          ONLY : GET_TS_DYN
-#endif
 !
 ! !INPUT PARAMETERS:
 !
@@ -104,11 +102,9 @@ CONTAINS
     CHARACTER(LEN=63)   :: OrigUnit
     REAL(fp)            :: CH4
     LOGICAL             :: FOUND
-#if defined( MODEL_GEOS )
     INTEGER             :: DT
     REAL(fp)            :: dCH4, MWCH4
     LOGICAL             :: PseudoFlux
-#endif
 
     ! Strings
     CHARACTER(LEN=255)  :: ErrMsg
@@ -162,20 +158,16 @@ CONTAINS
        RETURN
     ENDIF
 
-#if defined( MODEL_GEOS )
     ! Write out pseudo (implied) CH4 flux?
     PseudoFlux = ASSOCIATED(State_Diag%CH4pseudoFlux)
     MWCH4      = State_Chm%SpcData(id_CH4)%Info%emMW_g
     IF ( MWCH4 <= 0.0_fp ) MWCH4 = 16.0_fp
     DT         = GET_TS_DYN()
-#endif
 
     !$OMP PARALLEL DO                 &
     !$OMP DEFAULT( SHARED )           &
     !$OMP PRIVATE( I, J, L, PBL_TOP, CH4 ) &
-#if defined( MODEL_GEOS )
     !$OMP PRIVATE( dCH4 ) &
-#endif
     !$OMP SCHEDULE( DYNAMIC )
     DO J = 1, State_Grid%NY
     DO I = 1, State_Grid%NX
@@ -186,15 +178,12 @@ CONTAINS
        ! Surface CH4 from HEMCO is in units [ppbv], convert to [v/v dry]
        CH4 = State_Chm%SFC_CH4(I,J) * 1e-9_fp
 
-#if defined( MODEL_GEOS )
        ! Zero diagnostics
        IF ( PseudoFlux ) State_Diag%CH4pseudoFlux(I,J) = 0.0_fp
-#endif
 
        ! Prescribe methane concentrations throughout PBL
        DO L=1,PBL_TOP
 
-#if defined( MODEL_GEOS )
           ! Eventually compute implied CH4 flux
           IF ( PseudoFlux ) THEN
              ! v/v dry
@@ -209,7 +198,6 @@ CONTAINS
              State_Diag%CH4pseudoFlux(I,J) = &
                 State_Diag%CH4pseudoFlux(I,J) + dCH4
           ENDIF
-#endif
 
           State_Chm%Species(I,J,L,id_CH4) = CH4
        ENDDO

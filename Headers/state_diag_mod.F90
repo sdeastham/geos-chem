@@ -912,6 +912,9 @@ MODULE State_Diag_Mod
      CHARACTER(LEN=31 ), POINTER :: ObsPack_Species_Name (:  )
      CHARACTER(LEN=80 ), POINTER :: ObsPack_Species_LName(:  )
 
+     REAL(f4),           POINTER :: CH4pseudoFlux(:,:)
+     LOGICAL                     :: Archive_CH4pseudoFlux
+
 #ifdef MODEL_GEOS
      !----------------------------------------------------------------------
      ! The following diagnostics are only used when
@@ -942,9 +945,6 @@ MODULE State_Diag_Mod
 
      REAL(f4),           POINTER :: RO2concAfterChem(:,:,:)
      LOGICAL                     :: Archive_RO2concAfterChem
-
-     REAL(f4),           POINTER :: CH4pseudoFlux(:,:)
-     LOGICAL                     :: Archive_CH4pseudoFlux
 
      !%%%%% PM2.5 diagnostics %%%%%
 
@@ -4342,7 +4342,6 @@ CONTAINS
           RETURN
        ENDIF
 
-#ifdef MODEL_GEOS
        !--------------------------------------------------------------------
        ! CH4 pseudo-flux
        !--------------------------------------------------------------------
@@ -4364,7 +4363,6 @@ CONTAINS
           CALL GC_Error( errMsg, RC, thisLoc )
           RETURN
        ENDIF
-#endif
 
 #if defined( MODEL_GEOS ) || defined( MODEL_WRF )
        !--------------------------------------------------------------------
@@ -9600,12 +9598,12 @@ CONTAINS
                    Ptr2Data = State_Diag%PM25soa,                            &
                    RC       = RC                                            )
     IF ( RC /= GC_SUCCESS ) RETURN
+#endif
 
     CALL Finalize( diagId   = 'CH4pseudoFlux',                               &
                    Ptr2Data = State_Diag%CH4pseudoFlux,                      &
                    RC       = RC                                            )
     IF ( RC /= GC_SUCCESS ) RETURN
-#endif
 
 #if defined(MODEL_GEOS) || defined(MODEL_WRF)
     !=======================================================================
@@ -10289,12 +10287,10 @@ CONTAINS
        IF ( isUnits   ) Units = 'molec cm-3'
        IF ( isRank    ) Rank  = 3
 
-#ifdef MODEL_GEOS
     ELSE IF ( TRIM( Name_AllCaps ) == 'CH4PSEUDOFLUX' ) THEN
        IF ( isDesc    ) Desc  = 'CH4 pseudo-flux balancing chemistry'
        IF ( isUnits   ) Units = 'kg m-2 s-1'
        IF ( isRank    ) Rank  = 2
-#endif
 
 #if defined( MODEL_GEOS ) || defined( MODEL_WRF )
     ELSE IF ( TRIM( Name_AllCaps ) == 'KPPERROR' ) THEN
