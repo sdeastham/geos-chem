@@ -2650,18 +2650,6 @@ CONTAINS
     ! CH4 error checks 
     !=======================================================================
 
-    ! CH4 surface boundary conditions have to be turned off in GEOS-5
-    IF ( Input_Opt%LCH4SBC ) THEN
-       IF ( am_I_Root ) THEN
-          WRITE(*,*) 'Please disable CH4 boundary conditions in input.geos.rc'
-          WRITE(*,*) 'CH4 boundary conditions will automatically be applied'
-          WRITE(*,*) 'if the CH4 emissions flag in input.geos.rc is turned off.'
-          WRITE(*,*) '=> Turn on surface BCs :---'
-          WRITE(*,*) '   => CH4?             : F'
-       ENDIF
-       ASSERT_(.FALSE.)
-    ENDIF
-
     ! If CH4 emissions are turned on, boundary conditions will not be set
     ! and CH4 emissions are expected to be provided via HEMCO 
     IF ( am_I_Root ) THEN

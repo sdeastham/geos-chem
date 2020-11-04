@@ -274,8 +274,7 @@ CONTAINS
     ! diagnostics are no longer used to force-feed the ND58 bpch diagnostics
     ! becasue we now archive the exact same quantities to the HEMCO
     ! diagnostics output. (bmy, mps, 10/19/18)
-    IF ( Input_Opt%ITS_A_CH4_SIM .OR.            &
-       ( id_CH4 > 0 .and. Input_Opt%LCH4EMIS ) ) THEN
+    IF ( Input_Opt%ITS_A_CH4_SIM ) THEN
        CALL EmissCh4( Input_Opt, State_Met, RC )
 
        ! Trap potential errors

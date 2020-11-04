@@ -882,7 +882,7 @@ CONTAINS
     IF ( .NOT. Input_Opt%LCH4EMIS .AND. ( DoTurb .OR. DoTend ) ) THEN
 #else
     IF ( Phase /= 2 .AND. Input_Opt%ITS_A_FULLCHEM_SIM  &
-         .AND. IND_('CH4','A') > 0 ) THEN
+         .AND. IND_('CH4','A') > 0 .AND. ( .NOT. Input_Opt%LCH4EMIS )) THEN
 #endif
        CALL SET_CH4 ( Input_Opt, State_Chm, State_Diag, &
                       State_Grid, State_Met, RC )
