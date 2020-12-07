@@ -61,6 +61,7 @@ CONTAINS
                               lonCtr,        latCtr,                      &
 #if !defined( MODEL_GEOS )
                               GC,            EXPORT,                      &
+                              AP,            BP,                          &
 #endif
                               Input_Opt,     State_Chm,  State_Diag,      &
                               State_Grid,    State_Met,  HcoConfig,       &
@@ -77,8 +78,8 @@ CONTAINS
     USE Input_Mod,               ONLY : Read_Input_File
     USE Input_Opt_Mod,           ONLY : OptInput, Set_Input_Opt
     USE Linoz_Mod,               ONLY : Linoz_Read
+    USE Pressure_Mod,            ONLY : Accept_External_ApBp
     USE PhysConstants,           ONLY : PI_180
-    USE Pressure_Mod,            ONLY : Init_Pressure
     USE State_Chm_Mod,           ONLY : ChmState
     USE State_Diag_Mod,          ONLY : DgnState
     USE State_Grid_Mod,          ONLY : GrdState, Init_State_Grid
@@ -112,6 +113,8 @@ CONTAINS
 #if !defined( MODEL_GEOS )
     TYPE(ESMF_State),    INTENT(INOUT), TARGET :: EXPORT ! Export state object
     TYPE(ESMF_GridComp), INTENT(INOUT)         :: GC     ! Ref to this GridComp
+    REAL(ESMF_KIND_R8),  INTENT(IN)            :: AP(:)  ! AP for pressure (Pa)
+    REAL(ESMF_KIND_R8),  INTENT(IN)            :: BP(:)  ! BP for pressure (unitless)
 #endif
     TYPE(OptInput),      INTENT(INOUT) :: Input_Opt      ! Input Options object
     TYPE(ChmState),      INTENT(INOUT) :: State_Chm      ! Chem State object
@@ -137,9 +140,11 @@ CONTAINS
 !
 ! !LOCAL VARIABLES:
 !
-    INTEGER                        :: I, J, L, STATUS
-    CHARACTER(LEN=ESMF_MAXSTR)     :: Iam
-    TYPE(ESMF_Config)              :: CF            ! Grid comp config object
+    INTEGER                         :: I, J, L, STATUS
+    CHARACTER(LEN=ESMF_MAXSTR)      :: Iam
+    TYPE(ESMF_Config)               :: CF            ! Grid comp config object
+    REAL(ESMF_KIND_R8), ALLOCATABLE :: AP_Flip(:)
+    REAL(ESMF_KIND_R8), ALLOCATABLE :: BP_Flip(:)
 
     !=======================================================================
     ! GCHP_CHUNK_INIT begins here
@@ -224,6 +229,20 @@ CONTAINS
     CALL GC_Init_Extra( HistoryConfig%DiagList, Input_Opt,    &
                         State_Chm, State_Diag, State_Grid, RC )
     _ASSERT(RC==GC_SUCCESS, 'Error calling GC_Init_Extra')
+
+    ! Set AP and BP, flipping and converting Ap to hPa
+    ALLOCATE( AP_Flip( State_Grid%NZ+1 ), Stat=RC )
+    _ASSERT(RC==GC_SUCCESS, 'Error allocating AP_Flip during init')
+    ALLOCATE( BP_Flip( State_Grid%NZ+1 ), Stat=RC )
+    _ASSERT(RC==GC_SUCCESS, 'Error allocating BP_Flip during init')
+    Do L=1, State_Grid%NZ+1
+        AP_Flip(L) = AP(State_Grid%NZ + 2 - L)
+        BP_Flip(L) = BP(State_Grid%NZ + 2 - L)
+    End Do
+    CALL Accept_External_ApBp( State_Grid, AP_Flip * 0.01, BP_Flip, RC=RC )
+    _ASSERT(RC==GC_SUCCESS, 'Error calling Accept_External_ApBp' )
+    DEALLOCATE(AP_Flip)
+    DEALLOCATE(BP_Flip)
 
     ! Set initial State_Chm%Species units to units expected in transport
 # if defined( MODEL_GEOS )

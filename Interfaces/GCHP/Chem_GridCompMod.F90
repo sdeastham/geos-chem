@@ -72,6 +72,8 @@ MODULE Chem_GridCompMod
   USE PHYSCONSTANTS
 #endif
 
+  USE MAPL_EtaHybridVerticalCoordinateMod
+
   IMPLICIT NONE
   PRIVATE
 !
@@ -94,6 +96,7 @@ MODULE Chem_GridCompMod
   TYPE GEOSCHEM_State
      PRIVATE
      TYPE(ESMF_Config)             :: myCF           ! Private ESMF Config obj
+     TYPE(EtaHybridVerticalCoordinate) :: EHVC       ! Vertical coordinate description
   END TYPE GEOSCHEM_State
 
   ! Hook for the ESMF
@@ -399,6 +402,7 @@ CONTAINS
     CHARACTER(LEN=ESMF_MAXSTR)    :: compName      ! Gridded Component name
     CHARACTER(LEN=ESMF_MAXSTR)    :: COMP_NAME     ! This syntax for mapl_acg.pl
     CHARACTER(LEN=ESMF_MAXSTR)    :: HcoConfigFile ! HEMCO configuration file
+    CHARACTER(LEN=ESMF_MAXSTR)    :: EtaConfigFile ! Vertical coord configuration file
     CHARACTER(LEN=ESMF_MAXSTR)    :: SpcName       ! Registered species name
     CHARACTER(LEN=40)             :: AdvSpc(500)
     CHARACTER(LEN=255)            :: LINE, MSG, SUBSTRS(500)
@@ -1577,6 +1581,15 @@ CONTAINS
                                                             __RC__ )
     ENDDO
 
+    ! Set vertical coordinate
+    ! --------------------
+    CALL ESMF_ConfigGetAttribute( myState%myCF, EtaConfigFile, &
+                                  Label="VERT_CONFIG:", &
+                                  Default="AkBk_Config.rc", __RC__ )
+
+    if (MAPL_am_I_Root()) write(*,'(2a)') 'Reading vertical coord from ', Trim(EtaConfigFile)
+    myState%EHVC = EtaHybridVerticalCoordinate(EtaConfigFile, __RC__ )
+
     ! Set HEMCO services
     ! --------------------
     CALL ESMF_ConfigGetAttribute( myState%myCF, HcoConfigFile, &
@@ -1645,6 +1658,7 @@ CONTAINS
     USE TIME_MOD,  ONLY : GET_TS_CHEM, GET_TS_EMIS
     USE TIME_MOD,  ONLY : GET_TS_DYN,  GET_TS_CONV
     USE TIME_MOD,  ONLY : GET_TS_RAD
+
 !#if defined( MODEL_GEOS )
 !    USE TENDENCIES_MOD, ONLY : Tend_CreateClass
 !    USE TENDENCIES_MOD, ONLY : Tend_Add
@@ -1764,6 +1778,9 @@ CONTAINS
     INTEGER                      :: h,    m,  s    ! Hour, minute, seconds
     INTEGER                      :: doy
 
+    REAL(kind=ESMF_KIND_R8), POINTER  :: APr8(:)
+    REAL(kind=ESMF_KIND_R8), POINTER  :: BPr8(:)
+
     __Iam__('Initialize_')
 
     !=======================================================================
@@ -1802,6 +1819,7 @@ CONTAINS
     ! since the variables of Input_Opt may be 'erased' during initialization
     ! of GEOS-Chem.
 #endif
+
     CALL Extract_( GC,                        &  ! Ref to this Gridded Comp 
                    Clock,                     &  ! ESMF Clock object
                    Grid        = Grid,        &  ! ESMF Grid object
@@ -1850,6 +1868,21 @@ CONTAINS
                                  Label="MEMORY_DEBUG_LEVEL:" , RC=STATUS)
     _VERIFY(STATUS)
 #endif
+
+    ! Get vertical coordinate information
+    Allocate(APr8(LM+1),STAT=STATUS)
+    _ASSERT(STATUS==0,'Could not allocate APr8')
+    Allocate(BPr8(LM+1),STAT=STATUS)
+    _ASSERT(STATUS==0,'Could not allocate BPr8')
+
+    CALL Extract_( GC,                        &  ! Ref to this Gridded Comp 
+                   Clock,                     &  ! ESMF Clock object
+                   Grid        = Grid,        &  ! ESMF Grid object
+                   MaplCF      = MaplCF,      &  ! AGCM.rc/GCHP.rc config object
+                   GeosCF      = GeosCF,      &  ! GEOSCHEM*.rc Config object
+                   Ak          = APr8,        &  ! Vertical coordinate Ak
+                   Bk          = BPr8,        &  ! Vertical coordinate Bk
+                   __RC__                      )
 
     !=======================================================================
     ! Save values from the resource file (GCHP.rc for GCHP)
@@ -1950,11 +1983,11 @@ CONTAINS
     State_Grid%XMaxOffset  = State_Grid%NX ! X offset from global grid
     State_Grid%YMinOffset  = 1             ! Y offset from global grid
     State_Grid%YMaxOffset  = State_Grid%NY ! Y offset from global grid
-    State_Grid%MaxTropLev  = 40            ! # trop. levels
+    State_Grid%MaxTropLev  = Min(40,State_Grid%NZ)
 #if defined( MODEL_GEOS )
     State_Grid%MaxStratLev = value_LLSTRAT ! # strat. levels
 #else
-    State_Grid%MaxStratLev = 59            ! # strat. levels
+    State_Grid%MaxStratLev = Min(59,State_Grid%NZ)
 #endif
 
     ! Call the GCHP initialize routine
@@ -1969,6 +2002,8 @@ CONTAINS
 #if !defined( MODEL_GEOS )
                           GC        = GC,         & ! Ref to this gridded comp
                           EXPORT    = EXPORT,     & ! Export state object
+                          AP        = APr8,       & ! AP for pressure (Pa)
+                          BP        = BPr8,       & ! BP for pressure (unitless)
 #endif
                           Input_Opt = Input_Opt,  & ! Input Options obj
                           State_Chm = State_Chm,  & ! Chemistry State obj
@@ -1978,6 +2013,9 @@ CONTAINS
                           HcoConfig = HcoConfig,  & ! HEMCO config obj 
                           HistoryConfig = HistoryConfig, & ! History Config Obj
                           __RC__                 )
+
+    Deallocate(APr8)
+    Deallocate(BPr8)
 
 #if defined( MODEL_GEOS )
     !=======================================================================
@@ -4765,7 +4803,7 @@ CONTAINS
                        nhms,       year,     month,   day,    dayOfYr,   &
                        hour,       minute,   second,  utc,    hElapsed,  &
                        tsChem,     tsDyn,    mpiComm, ZTH,   SLR,        &
-                       tsRad,                                            &
+                       tsRad,      Ak,       Bk,                         &
 #if defined( MODEL_GEOS )
                        haveImpRst,                                       &
 #endif
@@ -4800,6 +4838,8 @@ CONTAINS
     INTEGER,             INTENT(OUT), OPTIONAL :: LM          ! Total # levs
     REAL(ESMF_KIND_R4),  POINTER,     OPTIONAL :: lonCtr(:,:) ! Lon ctrs [rad]
     REAL(ESMF_KIND_R4),  POINTER,     OPTIONAL :: latCtr(:,:) ! Lat ctrs [rad]
+    REAL(kind=ESMF_KIND_R8),  POINTER,     OPTIONAL :: Ak(:)       ! Vert coord Ak [Pa]
+    REAL(kind=ESMF_KIND_R8),  POINTER,     OPTIONAL :: Bk(:)       ! Vert coord Bk [-]
 
     !----------------------------------
     ! Global grid coordinates
@@ -4893,6 +4933,8 @@ CONTAINS
     REAL                          :: elapsedHours   ! Elapsed hours of run
     REAL(ESMF_KIND_R8)            :: dt_r8          ! chemistry timestep
 
+    REAL(ESMF_KIND_R8)            :: ptop, pint
+
     __Iam__('Extract_')
 
     !=======================================================================
@@ -4951,6 +4993,13 @@ CONTAINS
     
     ! Get the Config object based on "GEOSCHEMchem_GridComp.rc"
     GeosCF = myState%myCF
+
+    ! Vertical coordinate info
+    If (Present(Ak).and.Present(Bk)) Then
+        Call myState%EHVC%get_eta(ptop,pint,Ak,Bk,__RC__)
+    Else
+        _ASSERT(.not.(Present(Ak).or.Present(Bk)),'Must request BOTH Ak and Bk')
+    End If
 
     ! Dynamic timestep (in seconds)
     IF ( PRESENT( tsDyn ) ) THEN

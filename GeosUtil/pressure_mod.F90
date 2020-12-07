@@ -36,7 +36,7 @@ MODULE PRESSURE_MOD
 #if defined( ESMF_ ) || defined( MODEL_ )
   PUBLIC  :: Accept_External_Pedge
 #endif
-#if defined( MODEL_WRF ) || defined( MODEL_CESM )
+#if defined( ESMF_ ) || defined( MODEL_WRF ) || defined( MODEL_CESM )
   PUBLIC  :: Accept_External_ApBp
 #endif
 !
@@ -793,7 +793,7 @@ CONTAINS
           BP(L) = b132_loc(State_Grid%NZ+2-L)
        ENDDO
 
-#if !defined( MODEL_WRF ) && !defined( MODEL_CESM )
+#if !defined( ESMF_ ) && !defined( MODEL_WRF ) && !defined( MODEL_CESM )
     ELSE
 
        WRITE( nLev, * ) State_Grid%NZ
@@ -904,7 +904,7 @@ CONTAINS
   END SUBROUTINE Accept_External_Pedge
 !EOC
 #endif
-#if defined ( MODEL_WRF ) || defined( MODEL_CESM )
+#if defined ( MODEL_WRF ) || defined( MODEL_CESM ) || defined( ESMF_ )
 !------------------------------------------------------------------------------
 !                  GEOS-Chem Global Chemical Transport Model                  !
 !------------------------------------------------------------------------------
