@@ -152,13 +152,13 @@
   ! transport is correctly implemented.
   State_Met%RH                  = RH          * 1d2          ! 1 -> %
   if (flip_vertical) then
-     State_Met%U                   = ULL  (:,:,State_Grid%NZ:1:-1)         ! m/s
-     State_Met%V                   = VLL  (:,:,State_Grid%NZ:1:-1)         ! m/s
+     State_Met%U                   = UA   (:,:,State_Grid%NZ:1:-1)         ! m/s
+     State_Met%V                   = VA   (:,:,State_Grid%NZ:1:-1)         ! m/s
      State_Met%SPHU1               = SPHU1(:,:,State_Grid%NZ:1:-1)*1.0d3   ! kg/kg -> g/kg
      State_Met%SPHU2               = SPHU2(:,:,State_Grid%NZ:1:-1)*1.0d3   ! kg/kg -> g/kg
   else
-     State_Met%U                   = ULL                        ! m/s
-     State_Met%V                   = VLL                        ! m/s
+     State_Met%U                   = UA                         ! m/s
+     State_Met%V                   = VA                         ! m/s
      State_Met%SPHU1               = SPHU1       *1.0d3         ! kg/kg -> g/kg
      State_Met%SPHU2               = SPHU2       *1.0d3         ! kg/kg -> g/kg
   end if
