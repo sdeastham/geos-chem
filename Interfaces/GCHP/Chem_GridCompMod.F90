@@ -595,8 +595,10 @@ CONTAINS
     ! Are we flipping met fields?
     CALL ESMF_ConfigGetAttribute( myState%myCF, opt_int, &
                                   Label = "FLIP_MET:",&
+                                  Default=0,&
                                   __RC__ ) 
     flip_vertical = (opt_int>0)
+    if(MAPL_am_I_Root()) write(*,'(a,L1)') ' --> Flip met? ', flip_vertical
 #endif
 
 !-- Read in species from input.geos and set FRIENDLYTO
