@@ -2359,12 +2359,15 @@ CONTAINS
 
        ! This is mostly for testing 
        IF ( STATUS /= ESMF_SUCCESS ) THEN
-          IF( am_I_Root ) THEN
+          IF( MAPL_am_I_Root() ) THEN
              WRITE(*,*) 'Cannot find in internal state: ', TRIM(SPFX) &
                         //TRIM(Int2Spc(I)%Name),I
           ENDIF
           Int2Spc(I)%Internal => NULL()
+#if defined( MODEL_GEOS )
           CYCLE
+          _ASSERT(.FALSE.,'Error finding internal state variable')
+#endif
        ENDIF
 
 #if defined( MODEL_GEOS )
