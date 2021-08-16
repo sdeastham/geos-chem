@@ -206,7 +206,8 @@ MODULE UCX_MOD
   INTEGER ::             id_HCl,      id_HNO2,   id_HNO3,  id_N
   INTEGER :: id_HNO4,    id_HOBr,     id_HOCl,   id_N2O,   id_N2O5
   INTEGER :: id_NIT,     id_NO,       id_NO2,    id_NO3,   id_O3
-  INTEGER :: id_OClO,    id_PAN,      id_SO2,   id_SO4
+  INTEGER :: id_OClO,    id_PAN,      id_SO2,    id_SO4
+  INTEGER :: id_OCPI
 
 CONTAINS
 !
@@ -1001,6 +1002,12 @@ CONTAINS
     REAL(fp)               :: BELOWGRAD, ABOVEGRAD
     INTEGER                :: LOCALPROFILE, NUMSEDSTEPS, STARTPT, ISED
 
+    ! New settling
+    Real(fp)               :: rwet_vec(State_Grid%NZ)
+    Real(fp)               :: rho_vec(State_Grid%NZ)
+    Real(fp)               :: lambda_vec(State_Grid%NZ)
+    Real(fp)               :: visc_vec(State_Grid%NZ)
+
     ! Local variables for quantities from Input_Opt
     LOGICAL                :: LGRAVSTRAT
 
@@ -1008,6 +1015,14 @@ CONTAINS
     REAL(fp), POINTER      :: Spc (:,:,:,:)
     REAL(f4), POINTER      :: STATE_PSC(:,:,:)
     REAL(fp), POINTER      :: WERADIUS(:,:,:,:)
+    REAL(fp), POINTER      :: Spc_Vec(:)
+
+    ! Temporary storage of reused data
+    Real(fp)               :: DZ_Vec(State_Grid%NZ)
+    Real(fp)               :: PMid_Vec(State_Grid%NZ)
+    Logical                :: InTrop_Vec(State_Grid%NZ)
+
+    INTEGER                :: RC_LOCAL
 
     !=================================================================
     ! SETTLE_STRAT_AER begins here!
@@ -1346,7 +1361,7 @@ CONTAINS
     If (Input_Opt%LStratMicro) Then
        RC = 0
        !$OMP PARALLEL DO        &
-       !$OMP DEFAULT( SHARED  ) 
+       !$OMP DEFAULT( SHARED  ) &
        !$OMP PRIVATE( J,            I,            L,          TEMP       ) &
        !$OMP PRIVATE( sp_Num,       sp_Lambda,    VISC,       RC_Local   ) &
        !$OMP PRIVATE( rwet_vec,     rho_vec,      lambda_vec, visc_vec   ) &
@@ -1799,7 +1814,7 @@ CONTAINS
 !\\
 ! !INTERFACE:
 !
-  SUBROUTINE CALC_STRAT_AER( Input_Opt, State_Chm, State_Grid, State_Met,
+  SUBROUTINE CALC_STRAT_AER( Input_Opt, State_Chm, State_Grid, State_Met, &
                              State_Diag, Run_Micro, RC )
 !
 ! !USES:
@@ -1930,7 +1945,7 @@ CONTAINS
     LOGICAL                 :: LStratMicro
 
     ! Local variables for quantities from species database
-    REAL(fp)                :: NIT_MW_G, HNO3_MW_G, H2O_MW_G
+    REAL(fp)                :: NIT_MW_G, HNO3_MW_G, H2O_MW_G, SO4_MW_G
 
     ! Pointers
     REAL(fp), POINTER       :: Spc (:,:,:,:)
@@ -1968,10 +1983,11 @@ CONTAINS
     NIT_MW_G  = State_Chm%SpcData(id_NIT)%Info%emMW_g   ! g/mol
     HNO3_MW_G = State_Chm%SpcData(id_HNO3)%Info%emMW_g  ! g/mol
     H2O_MW_G  = State_Chm%SpcData(id_H2O)%Info%emMW_g   ! g/mol
+    SO4_MW_G  = State_Chm%SpcData(id_SO4)%Info%emMW_g   ! g/mol
 
     ! If we are using sectional aerosols in the stratosphere, run that
     If (LStratMicro) Then
-       Call Do_Sect_Aer(am_I_Root, Input_Opt, State_Met, State_Chm, &
+       Call Do_Sect_Aer(Input_Opt, State_Met, State_Chm, &
                         State_Diag, State_Grid, Run_Micro, RC)
        If (RC.ne.0) Then
           Call Error_Stop('Failure in sectional aerosol calculations', &
@@ -2031,7 +2047,7 @@ CONTAINS
     !$OMP PRIVATE( RHO_BIN,      RAD_BIN,            MASS_BIN      ) &
     !$OMP PRIVATE( MASS_WET,     VOL_WET,            RAD_WET       ) &
     !$OMP PRIVATE( MASS_SUM,     VOL_SUM,            RAD_SUM       ) &
-    !$OMP PRIVATE( NDENS_BIN,    SAD_BIN,            VOL_BIN,      ) &
+    !$OMP PRIVATE( NDENS_BIN,    SAD_BIN,            VOL_BIN       ) &
     !$OMP PRIVATE( VOL_TOT,      BOX_LAT                           ) &
     !$OMP SCHEDULE( DYNAMIC )
     DO L = 1, State_Grid%NZ
@@ -2395,10 +2411,14 @@ CONTAINS
           ! Mass-weighted mean (wet mass) for box density (kg/m3)
           Rho_Aer_Box = Mass_Sum/Vol_Sum
           ! Total water taken up by aerosol (v/v)
-          H2O_Box_L = (Mass_Sum - KG_Aer_Box) * 
+          H2O_Box_L = (Mass_Sum - KG_Aer_Box) * &
                       InvAir / H2O_MW_g
           ! Area-weighted mean gamma and area-weighted mean radius (m)
           If (SAD_Aer_Box .gt. Tiny(1.0e+0_fp)) Then
+             Do K=1,11
+                 Gamma_Box(K) = Gamma_Box(K) / SAD_Aer_Box
+             End Do
+             Rad_Aer_Box = Rad_Sum / SAD_Aer_Box
           Else
              ! No aerosol - zero out the rates
              Gamma_Box = 0.0e+0_fp
@@ -4015,8 +4035,10 @@ CONTAINS
        IF ( ABS(State_Grid%YMid(I,J)) <= 30 ) THEN
           ! Level with minimum temperature,
           ! use MASK to screen for >10 hPa
-          LEVCPT = MINLOC( State_Met%T(I,J,:), DIM=1, &
-                           MASK=(State_Met%PMID(I,J,:) >= 10) )
+          !LEVCPT = MINLOC( State_Met%T(I,J,:), DIM=1, &
+          !                 MASK=(State_Met%PMID(I,J,:) >= 10) )
+          ! Use simpler boundary condition: force up to 70 hPa
+          LEVCPT = MINLOC(ABS(State_Met%PMID(I,J,:) - 70), DIM=1)
        ELSE
           LEVCPT = -1
        ENDIF
@@ -4588,6 +4610,7 @@ CONTAINS
     id_O3    = Ind_('O3'        )
     id_SO2   = Ind_('SO2'       )
     id_SO4   = Ind_('SO4'       )
+    id_OCPI  = Ind_('OCPI'      )
 
     ! Print info
     IF ( Input_Opt%amIRoot ) THEN
