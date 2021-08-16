@@ -69,6 +69,8 @@ add_library(GeosCore STATIC EXCLUDE_FROM_ALL
 	RnPbBe_mod.F90
 	rpmares_mod.F90
 	seasalt_mod.F90
+        sect_aer_mod.F90
+        sect_aer_data_mod.F90
 	set_global_ch4_mod.F90
 	set_prof_o3.F90
 	sfcvmr_mod.F90
