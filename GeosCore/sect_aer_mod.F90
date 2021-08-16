@@ -50,6 +50,7 @@ module sect_aer_mod
   USE sect_aux_mod, only : error_stop, debug_msg
 #else
   USE error_mod,    only : error_stop, debug_msg
+  Use errcode_mod
 #endif
 
 #if defined( USE_TIMERS )
@@ -133,7 +134,7 @@ CONTAINS
 !\\
 ! !INTERFACE:
 !
-  SUBROUTINE Do_Sect_Aer( am_I_Root, Input_Opt,  State_Met,  &
+  SUBROUTINE Do_Sect_Aer( Input_Opt,  State_Met,             &
                           State_Chm, State_Diag, State_Grid, &
                           Run_Micro, RC                      )
 !
@@ -155,7 +156,6 @@ CONTAINS
 !
 ! !INPUT VARIABLES:
 !
-    LOGICAL,        INTENT(IN)    :: am_I_Root  ! Is this the root CPU?
     TYPE(OptInput), INTENT(IN)    :: Input_Opt  ! Input Options object
     LOGICAL,        INTENT(IN)    :: Run_Micro  ! Run full microphysics calc?
     TYPE(GrdState), INTENT(IN)    :: State_Grid ! Grid description object
@@ -264,7 +264,7 @@ CONTAINS
     ! Implicit coagulation?
     LAER_coag_imp = .False.
 
-    If (am_I_Root) Then
+    If (Input_Opt%amIRoot) Then
        write(*,*) 'Running Do_Sect_Aer'
     End If
 
@@ -273,7 +273,7 @@ CONTAINS
     dt_substep = dt_step/Real(NAStep)
 
     ! Convert Eulerian data to VMR
-    Call Convert_Spc_Units(am_I_Root, Input_Opt,  State_Chm, &
+    Call Convert_Spc_Units(Input_Opt,  State_Chm, &
                            State_Grid, State_Met, 'v/v dry', &
                            RC, Src_Unit)
 
@@ -483,7 +483,7 @@ CONTAINS
     End If
 
     ! Convert back to whatever we had before
-    Call Convert_Spc_Units(am_I_Root, Input_Opt,  State_Chm, &
+    Call Convert_Spc_Units(Input_Opt,  State_Chm, &
                            State_Grid, State_Met, Src_Unit,  &
                            RC)
 
@@ -691,7 +691,7 @@ CONTAINS
 !\\
 ! !INTERFACE:
 !
-  SUBROUTINE Init_Sect_Aer( am_I_Root, Input_Opt,  State_Chm, State_Grid, RC )
+  SUBROUTINE Init_Sect_Aer( Input_Opt,  State_Chm, State_Grid, RC )
 !
 ! !USES:
 !
@@ -704,7 +704,6 @@ CONTAINS
 !
 ! !INPUT VARIABLES:
 !
-    LOGICAL,        INTENT(IN)    :: am_I_Root  ! Is this the root CPU?
     TYPE(OptInput), INTENT(IN)    :: Input_Opt  ! Input Options object
     TYPE(GrdState), INTENT(IN)    :: State_Grid ! Grid description object
 !
@@ -763,10 +762,10 @@ CONTAINS
     n_aer_bin = n_bins
 
     ! Run allocation routine
-    Call AER_allocate_ini(am_I_Root,Input_Opt,State_Chm,State_Grid,RC)
+    Call AER_allocate_ini(Input_Opt,State_Chm,State_Grid,RC)
 
     ! If showing debug information, print out nominal radius information
-    If (Input_Opt%LPRT.and.am_I_Root) Then
+    If (Input_Opt%LPRT.and.Input_Opt%amIRoot) Then
        write(*,'(a,I3,a)') 'Initializing sectional aerosols with ',N_Bins, ' bins'
        write(*,'(a)') 'Radius information:'
        Do k=1,n_aer_bin
@@ -879,15 +878,15 @@ CONTAINS
 !\\
 ! !INTERFACE:
 !
-  SUBROUTINE Cleanup_Sect_Aer( am_I_Root )
+  SUBROUTINE Cleanup_Sect_Aer( RC )
 !
 ! !USES:
 !
     USE sect_aer_data_mod,    Only : aer_cleanup
 !
-! !INPUT VARIABLES:
+! !OUTPUT VARIABLES:
 !
-    LOGICAL,        INTENT(IN)    :: am_I_Root  ! Is this the root CPU?
+    INTEGER,        INTENT(OUT)   :: RC                  ! Return code
 ! 
 ! !REVISION HISTORY:
 !  28 Nov 2018 - S.D.Eastham - Initial version
@@ -905,11 +904,17 @@ CONTAINS
     !=======================================================================
 
     ! Run cleanup routine
-    Call AER_cleanup(am_I_Root)
+    Call AER_cleanup()
 
     If (Allocated(ID_Bins      )) Deallocate(ID_Bins      )
     If (Allocated(aero_grow_d  )) Deallocate(aero_grow_d  )
     If (Allocated(aero_nrate_d )) Deallocate(aero_nrate_d )
+
+#if defined( MDL_BOX )
+    RC = 0
+#else
+    RC = GC_SUCCESS
+#endif
 
   end subroutine cleanup_sect_aer
 !EOC

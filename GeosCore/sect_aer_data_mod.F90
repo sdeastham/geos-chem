@@ -55,9 +55,8 @@ contains
     integer, intent(in)  :: n_boxes
     integer, intent(out) :: RC
 #else
-  subroutine AER_allocate_ini(am_I_Root,Input_Opt,State_Chm,State_Grid,RC)
+  subroutine AER_allocate_ini(Input_Opt,State_Chm,State_Grid,RC)
 
-    logical, intent(in)         :: am_I_Root
     TYPE(OptInput), INTENT(IN)  :: Input_Opt  ! Input Options object
     TYPE(ChmState), INTENT(IN)  :: State_Chm  ! Chemistry State object
     TYPE(GrdState), INTENT(IN)  :: State_Grid ! Grid description
@@ -200,9 +199,7 @@ contains
 
   end subroutine AER_allocate_ini
 
-  subroutine AER_cleanup(am_I_Root)
-
-    Logical, Intent(In) :: am_I_Root
+  subroutine AER_cleanup()
 
     If (allocated(ck))          deallocate(ck)
     If (allocated(aer_mass))    deallocate(aer_mass)

@@ -183,7 +183,12 @@ SUBROUTINE CLEANUP( Input_Opt, State_Grid, ERROR, RC )
   ENDIF
 
   ! Clean up sectional aerosols
-  Call Cleanup_Sect_Aer(Input_Opt%am_I_Root)
+  Call Cleanup_Sect_Aer( RC )
+  IF ( RC /= GC_SUCCESS ) THEN
+     ErrMsg = 'Error encountered in "Cleanup_Sect_Aer"!'
+     CALL GC_Error( ErrMsg, RC, ThisLoc )
+     RETURN
+  ENDIF
 
   ! Cleanup TOMS module
   CALL CLEANUP_TOMS( RC )

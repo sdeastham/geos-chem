@@ -71,7 +71,6 @@ MODULE State_Chm_Mod
      INTEGER                    :: nAeroSpc             ! # of Aerosol Species
      INTEGER                    :: nAeroType            ! # of Aerosol Types
      INTEGER                    :: nDryAlt              ! # dryalt species
-     INTEGER                    :: nAeroSpc             ! # of Aerosol Tracers
      INTEGER                    :: nDryDep              ! # drydep species
      INTEGER                    :: nGasSpc              ! # gas phase species
      INTEGER                    :: nHygGrth             ! # hygroscopic growth
@@ -1580,14 +1579,14 @@ CONTAINS
        DO N = 1, nBin
           ! Register each aerosol bin for weight percentage SO4
           Write(chmID,'(a,I0.3)') 'StratWPcg', N
-          CALL Register_ChmField( am_I_Root, chmID, State_Chm%Strat_WPcg, &
+          CALL Register_ChmField( Input_Opt, chmID, State_Chm%Strat_WPcg, &
                                   State_Chm, RC,    Ncat=N )
           CALL GC_CheckVar( 'State_Chm%Strat_WPcg', 1, RC )
           IF ( RC /= GC_SUCCESS ) RETURN
 
           ! Repeat for stratospheric aerosol density
           Write(chmID,'(a,I0.3)') 'StratDen', N
-          CALL Register_ChmField( am_I_Root, chmID, State_Chm%Strat_Den, &
+          CALL Register_ChmField( Input_Opt, chmID, State_Chm%Strat_Den, &
                                   State_Chm, RC,    Ncat=N )
           CALL GC_CheckVar( 'State_Chm%Strat_Den', 1, RC )
           IF ( RC /= GC_SUCCESS ) RETURN

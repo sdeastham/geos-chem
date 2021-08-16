@@ -1380,7 +1380,7 @@ CONTAINS
        ENDIF
 
        ! Initialize sectional aerosol code
-       Call Init_Sect_Aer(am_I_Root, Input_Opt, State_Chm, State_Grid, RC)
+       Call Init_Sect_Aer(Input_Opt, State_Chm, State_Grid, RC)
        
        ! Trap potential errors
        IF ( RC /= GC_SUCCESS ) THEN
