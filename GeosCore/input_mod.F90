@@ -2508,6 +2508,22 @@ CONTAINS
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%LSKYRAD(2)
 
+    ! Use fixed dynamical heating assumption?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'RRTMG_FDH', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%RRTMG_FDH
+
+    ! Read in dynamical heating from a prior simulation?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'Read_Dyn_Heating', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%Read_Dyn_Heating
+
     ! Radiation timestep?
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'TS_RAD', RC )
     IF ( RC /= GC_SUCCESS ) THEN
@@ -2556,6 +2572,11 @@ CONTAINS
        ErrMsg = 'Cannot have all-sky flux turned on without RRTMG'
        CALL GC_Error( ErrMsg, RC, ThisLoc )
     ENDIF
+    ! This is technically valid but makes no sense
+    IF ( ( .not. Input_Opt%RRTMG_FDH ) .and. Input_Opt%Read_Dyn_Heating ) Then
+       ErrMsg = 'Reading heating rate data, but not using FDH'
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+    End If
 
     !=================================================================
     ! Print to screen
@@ -2576,6 +2597,10 @@ CONTAINS
        WRITE( 6, 125 ) 'Clear-sky/All-sky           : ', &
                         Input_Opt%LSKYRAD(1), '/',       &
                         Input_Opt%LSKYRAD(2)
+       WRITE( 6, 100 ) 'Calc. strat. adj. with FDH  : ', &
+                        Input_Opt%RRTMG_FDH
+       WRITE( 6, 100 ) 'Read dynamical heating      : ', &
+                        Input_Opt%Read_Dyn_Heating
        WRITE( 6, 110 ) 'Radiation timestep [sec]    : ', &
                         Input_Opt%TS_RAD
     ENDIF
