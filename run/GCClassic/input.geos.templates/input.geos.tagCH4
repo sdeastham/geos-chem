@@ -110,6 +110,8 @@ Calculate LW fluxes?    : F
 Calculate SW fluxes?    : F
 Clear-sky flux?         : F
 All-sky flux?           : F
+Strat. adj. with FDH?   : F
+Read dynamical heating? : F
 Radiation Timestep [sec]: 10800
 ------------------------+------------------------------------------------------
 %%% OBSPACK MENU %%%    :
