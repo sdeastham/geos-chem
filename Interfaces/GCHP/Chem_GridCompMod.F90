@@ -1450,6 +1450,7 @@ CONTAINS
     USE TIME_MOD,  ONLY : GET_TS_CHEM, GET_TS_EMIS
     USE TIME_MOD,  ONLY : GET_TS_DYN,  GET_TS_CONV
     USE TIME_MOD,  ONLY : GET_TS_RAD
+    Use pfLogger,  ONLY : Logger
 !#if defined( MODEL_GEOS )
 !    USE TENDENCIES_MOD, ONLY : Tend_CreateClass
 !    USE TENDENCIES_MOD, ONLY : Tend_Add
@@ -1574,6 +1575,7 @@ CONTAINS
     INTEGER                     :: IL_WORLD, JL_WORLD    ! # lower indices in global grid
     INTEGER                     :: IU_WORLD, JU_WORLD    ! # upper indices in global grid
 
+    !Class(Logger), pointer      :: lgr
 
     __Iam__('Initialize_')
 
@@ -1610,6 +1612,10 @@ CONTAINS
     ! Initialize GEOS-Chem Input_Opt fields to zeros or equivalent
     CALL Set_Input_Opt( MAPL_am_I_Root(), Input_Opt, RC )
     _ASSERT(RC==GC_SUCCESS, 'Error calling Set_Input_Opt')
+
+    ! Grab the logger for this component
+    call MAPL_GetLogger(GC, Input_Opt%lgr, __RC__)
+    Input_Opt%compname = Trim(compname)
 
     ! Root CPU?
     am_I_Root = MAPL_am_I_Root()
