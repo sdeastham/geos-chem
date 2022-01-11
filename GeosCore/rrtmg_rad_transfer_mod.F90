@@ -715,7 +715,6 @@ CONTAINS
     ENDDO
     !$OMP END PARALLEL DO
 
-    !GET PCENTER, PEDGE AND DETERMINE IF IN TROP
     !%%% NOTE: LOOPS ARE GOING IN WRONG ORDER (bmy, 1/8/18)
     DO I = 1, State_Grid%NX
     DO J = 1, State_Grid%NY
@@ -810,61 +809,25 @@ CONTAINS
              CLDFR(I,J,L)  = State_Met%CLDF(I,J,L)
           ENDIF !CLOUDS
 
-          IF ( State_Met%InTroposphere(I,J,L) ) THEN
-             !-----------------------------
-             ! WE ARE IN THE TROPOSPHERE
-             !-----------------------------
+          ! SET O3, CH4, N2O AND CFC PROFILES
 
-             ! SET O3, CH4, N2O AND CFC PROFILES
-             ! G-C CHEMISTRY IS ONLY DONE IN THE TROP
-             ! THEREFORE State_Chm%Species WILL ONLY BE DEFINED IN THE TROP
+          !IF O3 REQUESTED THEN SPECMASK WILL BE SET TO ZERO
+          !SO THAT O3 WILL BE REMOVED RELATIVE TO THE BASELINE CASE
+          !(WHEN SPECMASK DEFAULTS TO 1)
+          !I.E. WE WANT TO RUN WITHOUT THE GAS IF IT HAS BEEN
+          !REQUESTED SO THAT WE CAN DIFFERENCE WITH THE BASELINE RUN
 
-             !IF O3 REQUESTED THEN SPECMASK WILL BE SET TO ZERO
-             !SO THAT O3 WILL BE REMOVED RELATIVE TO THE BASELINE CASE
-             !(WHEN SPECMASK DEFAULTS TO 1)
-             !I.E. WE WANT TO RUN WITHOUT THE GAS IF IT HAS BEEN
-             !REQUESTED SO THAT WE CAN DIFFERENCE WITH THE BASELINE RUN
-
-             IF (SPECMASK(NASPECRAD+1).EQ.1) THEN
-                O3VMR(I,J,L)  = State_Chm%Species(I,J,L,id_O3) * AIRMW / &
-                                State_Chm%SpcData(id_O3)%Info%MW_g
-
-             ENDIF
-
-             IF (SPECMASK(NASPECRAD+2).EQ.1) THEN
-                CH4VMR(I,J,L) = State_Chm%Species(I,J,L,id_CH4) * AIRMW / &
-                                State_Chm%SpcData(id_CH4)%Info%MW_g
-
-             ENDIF
-
-             N2OVMR(I,J,L) = State_Chm%Species(I,J,L,id_N2O) * AIRMW / &
-                             State_Chm%SpcData(id_N2O)%Info%MW_g
-
-             CFC11VMR(I,J,L) = State_Chm%Species(I,J,L,id_CFC11) * AIRMW / &
-                               State_Chm%SpcData(id_CFC11)%Info%MW_g
-
-             CFC12VMR(I,J,L) = State_Chm%Species(I,J,L,id_CFC12) * AIRMW / &
-                               State_Chm%SpcData(id_CFC12)%Info%MW_g
-
-             CCL4VMR(I,J,L)  = State_Chm%Species(I,J,L,id_CCL4) * AIRMW / &
-                               State_Chm%SpcData(id_CCL4)%Info%MW_g
-
-             CFC22VMR(I,J,L) = State_Chm%Species(I,J,L,id_HCFC22) * AIRMW / &
-                               State_Chm%SpcData(id_HCFC22)%Info%MW_g
-
-          ELSE
-             !-----------------------------
-             ! WE ARE IN THE STRATOSPHERE
-             !-----------------------------
-
+          IF (SPECMASK(NASPECRAD+1).EQ.1) THEN
              O3VMR(I,J,L)  = State_Chm%Species(I,J,L,id_O3) * AIRMW / &
                              State_Chm%SpcData(id_O3)%Info%MW_g
 
+          ENDIF
+
+          IF (SPECMASK(NASPECRAD+2).EQ.1) THEN
              CH4VMR(I,J,L) = State_Chm%Species(I,J,L,id_CH4) * AIRMW / &
                              State_Chm%SpcData(id_CH4)%Info%MW_g
 
-             N2OVMR(I,J,L) = State_Chm%Species(I,J,L,id_N2O) * AIRMW / &
-                             State_Chm%SpcData(id_N2O)%Info%MW_g
+          ENDIF
 
              CFC11VMR(I,J,L) =State_Chm%Species(I,J,L,id_CFC11) * AIRMW / &
                               State_Chm%SpcData(id_CFC11)%Info%MW_g
@@ -872,13 +835,20 @@ CONTAINS
              CFC12VMR(I,J,L) =State_Chm%Species(I,J,L,id_CFC12) * AIRMW / &
                               State_Chm%SpcData(id_CFC12)%Info%MW_g
 
-             CCL4VMR(I,J,L)  =State_Chm%Species(I,J,L,id_CCL4) * AIRMW / &
-                              State_Chm%SpcData(id_CCL4)%Info%MW_g
+          N2OVMR(I,J,L) = State_Chm%Species(I,J,L,id_N2O) * AIRMW / &
+                          State_Chm%SpcData(id_N2O)%Info%MW_g
 
-             CFC22VMR(I,J,L) =State_Chm%Species(I,J,L,id_HCFC22) * AIRMW/ &
-                              State_Chm%SpcData(id_HCFC22)%Info%MW_g
+          CFC11VMR(I,J,L) = State_Chm%Species(I,J,L,id_CFC11) * AIRMW / &
+                            State_Chm%SpcData(id_CFC11)%Info%MW_g
 
-          ENDIF
+          CFC12VMR(I,J,L) = State_Chm%Species(I,J,L,id_CFC12) * AIRMW / &
+                            State_Chm%SpcData(id_CFC12)%Info%MW_g
+
+          CCL4VMR(I,J,L)  = State_Chm%Species(I,J,L,id_CCL4) * AIRMW / &
+                            State_Chm%SpcData(id_CCL4)%Info%MW_g
+
+          CFC22VMR(I,J,L) = State_Chm%Species(I,J,L,id_HCFC22) * AIRMW / &
+                            State_Chm%SpcData(id_HCFC22)%Info%MW_g
        ENDDO
     ENDDO
     ENDDO
@@ -912,46 +882,40 @@ CONTAINS
              DO J = 1, State_Grid%NY
              DO I = 1, State_Grid%NX
 
-                ! We need to go above the tropopause to get
-                ! the strat AOD, but only for IS=8 and IS=9
-                IF ( State_Met%InTroposphere(I,J,L) .OR. &
-                     ( (IS.EQ.8) .OR. (IS.EQ.9) ) ) THEN
+                !MAKE SURE WE HAVE SENSIBLE DATA
+                !DONT WASTE TIME IF VIRTUALLY NO AEROSOL
+                IF (RTODAER(I,J,L,IBX,IS).GT.1e-10) THEN
+                   IF (IB.LE.16) THEN !LW
+                      IF (SPECMASK(IS).EQ.1) THEN
+                         TAUAER_LW(I,J,L,IB) = TAUAER_LW(I,J,L,IB) + &
+                              RTODAER(I,J,L,IBX,IS)
+                      ENDIF
+                   ELSE !SW
+                      !IF SPECMASK(IS)=1 THEN WE AGGREGATE THAT SPECIES FOR RRTMG
+                      !IF SPECMASK(IS)>1 THEN WE SAVE THAT SPECIES FOR DIAG OUTPUT
+                      IF (SPECMASK(IS).EQ.1) THEN
+                         TAUAER_SW(I,J,L,IB_SW)=TAUAER_SW(I,J,L,IB_SW)+ &
+                              RTODAER(I,J,L,IBX,IS)
+                         SSAAER(I,J,L,IB_SW) =  SSAAER(I,J,L,IB_SW) + &
+                              RTSSAER(I,J,L,IBX,IS)*RTODAER(I,J,L,IBX,IS)
+                         ASMAER(I,J,L,IB_SW) = ASMAER(I,J,L,IB_SW) + &
+                              RTASYMAER(I,J,L,IBX,IS) * &
+                              RTODAER(I,J,L,IBX,IS)*RTSSAER(I,J,L,IBX,IS)
+                      ENDIF
+                      IF (SPECMASK(IS).GT.1) THEN
+                         TAUAERDIAG(I,J,L,IB_SW)=TAUAERDIAG(I,J,L,IB_SW)+ &
+                              RTODAER(I,J,L,IBX,IS)
+                         SSAAERDIAG(I,J,L,IB_SW) = SSAAERDIAG(I,J,L,IB_SW) +&
+                              RTSSAER(I,J,L,IBX,IS)*RTODAER(I,J,L,IBX,IS)
+                         ASMAERDIAG(I,J,L,IB_SW) = ASMAERDIAG(I,J,L,IB_SW) +&
+                              RTASYMAER(I,J,L,IBX,IS) * &
+                              RTODAER(I,J,L,IBX,IS)*RTSSAER(I,J,L,IBX,IS)
+                         !IF ((IS.EQ.9).AND.(L.GT.30).AND.(IB_SW.EQ.10).AND.
+                         !   (RTODAER(I,J,L,IBX,IS).GT.0.0d0)) THEN
+                         ! write(6,*) 'STS',I,J,L,IBX,IS,RTODAER(I,J,L,IBX,IS), &
+                         !            RTSSAER(I,J,L,IBX,IS)
+                         !ENDIF
 
-                   !MAKE SURE WE HAVE SENSIBLE DATA
-                   !DONT WASTE TIME IF VIRTUALLY NO AEROSOL
-                   IF (RTODAER(I,J,L,IBX,IS).GT.1e-10) THEN
-                      IF (IB.LE.16) THEN !LW
-                         IF (SPECMASK(IS).EQ.1) THEN
-                            TAUAER_LW(I,J,L,IB) = TAUAER_LW(I,J,L,IB) + &
-                                 RTODAER(I,J,L,IBX,IS)
-                         ENDIF
-                      ELSE !SW
-                         !IF SPECMASK(IS)=1 THEN WE AGGREGATE THAT SPECIES FOR RRTMG
-                         !IF SPECMASK(IS)>1 THEN WE SAVE THAT SPECIES FOR DIAG OUTPUT
-                         IF (SPECMASK(IS).EQ.1) THEN
-                            TAUAER_SW(I,J,L,IB_SW)=TAUAER_SW(I,J,L,IB_SW)+ &
-                                 RTODAER(I,J,L,IBX,IS)
-                            SSAAER(I,J,L,IB_SW) =  SSAAER(I,J,L,IB_SW) + &
-                                 RTSSAER(I,J,L,IBX,IS)*RTODAER(I,J,L,IBX,IS)
-                            ASMAER(I,J,L,IB_SW) = ASMAER(I,J,L,IB_SW) + &
-                                 RTASYMAER(I,J,L,IBX,IS) * &
-                                 RTODAER(I,J,L,IBX,IS)*RTSSAER(I,J,L,IBX,IS)
-                         ENDIF
-                         IF (SPECMASK(IS).GT.1) THEN
-                            TAUAERDIAG(I,J,L,IB_SW)=TAUAERDIAG(I,J,L,IB_SW)+ &
-                                 RTODAER(I,J,L,IBX,IS)
-                            SSAAERDIAG(I,J,L,IB_SW) = SSAAERDIAG(I,J,L,IB_SW) +&
-                                 RTSSAER(I,J,L,IBX,IS)*RTODAER(I,J,L,IBX,IS)
-                            ASMAERDIAG(I,J,L,IB_SW) = ASMAERDIAG(I,J,L,IB_SW) +&
-                                 RTASYMAER(I,J,L,IBX,IS) * &
-                                 RTODAER(I,J,L,IBX,IS)*RTSSAER(I,J,L,IBX,IS)
-                            !IF ((IS.EQ.9).AND.(L.GT.30).AND.(IB_SW.EQ.10).AND.
-                            !   (RTODAER(I,J,L,IBX,IS).GT.0.0d0)) THEN
-                            ! write(6,*) 'STS',I,J,L,IBX,IS,RTODAER(I,J,L,IBX,IS), &
-                            !            RTSSAER(I,J,L,IBX,IS)
-                            !ENDIF
-
-                         ENDIF
                       ENDIF
                    ENDIF
                 ENDIF
