@@ -376,7 +376,7 @@ CONTAINS
     ! For RRTMG:
     NSPAA     = 8   ! number of species in LUT
     NASPECRAD = 16  ! aerosol species in RT
-    NSPECRAD  = 18  ! aerosol+gas species in RT
+    NSPECRAD  = 19  ! aerosol+gas species in RT
 
     IF ( .not. Input_Opt%DryRun ) THEN
        !-----------------------------------------------------------------------
