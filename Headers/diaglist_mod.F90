@@ -82,7 +82,7 @@ MODULE DiagList_Mod
   ! Configurable Settings Used for Diagnostic Names at Run-time
   !=========================================================================
   CHARACTER(LEN=5),  PUBLIC  :: RadWL(3)     ! Wavelengths in radiation menu
-  CHARACTER(LEN=4),  PUBLIC  :: RadOut(12)   ! Names of RRTMG outputs (tags)
+  CHARACTER(LEN=4),  PUBLIC  :: RadOut(16)   ! Names of RRTMG outputs (tags)
   INTEGER,           PUBLIC  :: nRadOut      ! # of selected RRTMG outputs
   LOGICAL,           PUBLIC  :: IsFullChem   ! Is this a fullchem simulation?
   CHARACTER(LEN=10), PUBLIC  :: AltAboveSfc  ! Alt for O3, HNO3 diagnostics
@@ -196,7 +196,7 @@ CONTAINS
     CHARACTER(LEN=255)       :: metadataID, registryID, registryIDprefix
     CHARACTER(LEN=255)       :: collname, AttName, AttValue
     CHARACTER(LEN=255)       :: AttComp,  FieldName
-    CHARACTER(LEN=2)         :: rrtmgOutputs(11)
+    CHARACTER(LEN=2)         :: rrtmgOutputs(10)
 
     ! SAVEd variables
     CHARACTER(LEN=255), SAVE :: LastCollName
@@ -749,7 +749,7 @@ CONTAINS
        strInd(4) = INDEX( TRIM(metadataID), 'RADSSA' )
        strInd(5) = INDEX( TRIM(metadataID), 'RADASYM' )
        strIndMax = MAX(strInd(1),strInd(2),strInd(3),strInd(4),strInd(5))
-       IF ( strIndMax == 1 .AND. nRadOut < 13 ) THEN
+       IF ( strIndMax == 1 .AND. nRadOut < 16 ) THEN
 
           ! If RRTMG diagnostics present, always calculate BASE, and store
           ! first, since used to calculate other outputs.
@@ -771,7 +771,9 @@ CONTAINS
              ! outputs, except the stratosphere (ST) and BASE (already added).
              ! ST must be explicit in HISTORY.rc and is not included in the
              ! RRTMG wildcard since it may not be relevant to the simulation.
-             RRTMGOutputs = (/'O3','ME','H2O','SU','NI','AM','BC','OA','SS','DU','PM'/)
+             ! CO2, CFCs, H2O, and N2O also excluded since they are somewhat
+             ! niche.
+             RRTMGOutputs = (/'O3','ME','SU','NI','AM','BC','OA','SS','DU','PM'/)
              DO N = 1, SIZE(rrtmgOutputs,1)
                 IF ( .not. ANY( RadOut == TRIM(rrtmgOutputs(N)) ) ) THEN
                    nRadOut          = nRadOut + 1
