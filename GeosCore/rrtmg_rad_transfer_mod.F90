@@ -2072,14 +2072,6 @@ CONTAINS
     !THE INDEX OF SPECMASK INDICATES THE POSITION OF THE SPECIES IN
     !THE RT OPTICS ARRAY FOR THE AEROSOL
     !E.G. SO4 = 1 I.E. RTODAER(*,*,*,*,1)
-    !
-    !===FUNCTIONALITY FOR ADDING NEW SPECIES===
-    !EXTRA SPECIES ARE ADDED AFTER NAER (BEFORE NDUST AND GASES)
-    !SO WE NEED TO BUMP ALL THE SPECIES AFTER THAT BY NXTRA
-    !WHERE NXTRA=NUMBER OF NEW SPECIES ADDED ABOVE THE STANDARD CODE
-    !E.G. FOR UCX NSPECRAD=18 AND STS AND NAT ARE INCLUDED
-    !IN RTODAER INDEX 8 AND 9, BEFORE DUST
-    NXTRA=NSPECRAD-16
 
     !CONVERT THE CURRENT SPECIES SELECTION FROM THE INPUT MENU INTO
     !THE REQUIRED SPECIES TO BE INCLUDED IN THE RRTMG CALCULATION
@@ -2092,27 +2084,27 @@ CONTAINS
 
        ! O3 = Ozone
        CASE( 1 )
-          SPECMASK(15+NXTRA)=0
+          SPECMASK(NASPECRAD+1)=0
 
        ! ME = Methane
        CASE( 2 )
-          SPECMASK(16+NXTRA)=0
+          SPECMASK(NASPECRAD+2)=0
 
        ! H2O = Water vapor
        CASE( 3 )
-          SPECMASK(17+NXTRA)=0
+          SPECMASK(NASPECRAD+3)=0
 
        ! CO2 = Carbon dioxide
        CASE( 4 )
-          SPECMASK(18+NXTRA)=0
+          SPECMASK(NASPECRAD+4)=0
 
        ! CFC = Chlorofluorocarbons
        CASE( 5 )
-          SPECMASK(19+NXTRA)=0
+          SPECMASK(NASPECRAD+5)=0
 
        ! N2O = Nitrous oxide
        CASE( 6 )
-          SPECMASK(20+NXTRA)=0
+          SPECMASK(NASPECRAD+6)=0
 
        ! SU = Sulfate
        CASE( 7 )
@@ -2141,13 +2133,10 @@ CONTAINS
 
        ! DU = Mineral dust
        CASE( 13 )
-          SPECMASK(8+NXTRA)=13
-          SPECMASK(9+NXTRA)=13
-          SPECMASK(10+NXTRA)=13
-          SPECMASK(11+NXTRA)=13
-          SPECMASK(12+NXTRA)=13
-          SPECMASK(13+NXTRA)=13
-          SPECMASK(14+NXTRA)=13
+          ! 7 dust bins for RT
+          Do II=10,16
+             SPECMASK(II)=13
+          End Do
 
        ! PM = All particulate matter
        ! add all aerosols but not gases here
