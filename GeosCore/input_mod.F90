@@ -2516,6 +2516,14 @@ CONTAINS
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%RRTMG_FDH
 
+    ! Allow seasonal evolution with FDH?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'RRTMG_SEFDH', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%RRTMG_SEFDH
+
     ! Read in dynamical heating from a prior simulation?
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'Read_Dyn_Heating', RC )
     IF ( RC /= GC_SUCCESS ) THEN
@@ -2572,6 +2580,10 @@ CONTAINS
        ErrMsg = 'Cannot have all-sky flux turned on without RRTMG'
        CALL GC_Error( ErrMsg, RC, ThisLoc )
     ENDIF
+    IF ( Input_Opt%RRTMG_SEFDH .and. (.not. Input_Opt%RRTMG_FDH)) Then
+       ErrMsg = 'Must enable FDH to enable SEFDH'
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+    End If
     ! This is technically valid but makes no sense
     IF ( ( .not. Input_Opt%RRTMG_FDH ) .and. Input_Opt%Read_Dyn_Heating ) Then
        ErrMsg = 'Reading heating rate data, but not using FDH'
@@ -2599,6 +2611,8 @@ CONTAINS
                         Input_Opt%LSKYRAD(2)
        WRITE( 6, 100 ) 'Calc. strat. adj. with FDH  : ', &
                         Input_Opt%RRTMG_FDH
+       WRITE( 6, 100 ) '--> Allow seasonal evolution: ', &
+                        Input_Opt%RRTMG_SEFDH
        WRITE( 6, 100 ) 'Read dynamical heating      : ', &
                         Input_Opt%Read_Dyn_Heating
        WRITE( 6, 110 ) 'Radiation timestep [sec]    : ', &
