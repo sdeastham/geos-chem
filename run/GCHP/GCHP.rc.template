@@ -23,6 +23,13 @@ LM: 72
 
 GEOSChem_CTM: 1
 
+# Use when running a perturbation
+# scenario with RRTMG's FDH or SEFDH
+# options. Set to 0 to CALCULATE dynamical
+# heating rates, set to 1 to READ rates
+# calculated from the reference scenario
+IMPORT_DYN_HEATING: 0
+
 AdvCore_Advection: 1
 	DYCORE: OFF
   HEARTBEAT_DT: 600

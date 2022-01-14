@@ -318,6 +318,8 @@ Calculate LW fluxes?    : F
 Calculate SW fluxes?    : F
 Clear-sky flux?         : F
 All-sky flux?           : F
+Strat. adj. with FDH?   : F
+ => ssn. evol. (SEFDH)? : F
 Radiation Timestep [sec]: 10800
 ------------------------+------------------------------------------------------
 %%% OBSPACK MENU %%%    :
