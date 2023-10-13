@@ -17,7 +17,7 @@ target_link_libraries(KPP_FirstPass
 )
 
 #----------------------------------------------------------------------------
-# Add libKPP.a -- custom mechanism (edit as necessary)
+# Add libKPP.a -- custom mechanism
 #----------------------------------------------------------------------------
 add_library(KPP
   STATIC EXCLUDE_FROM_ALL
@@ -63,7 +63,7 @@ target_compile_options(KPP
 )
 
 # FOR GFORTRAN ONLY: Disable variable tracking for gckpp_Jacobian.F90 in the
-# KPP/fullchem mechanism generated with KPP.  This will avoid a compiler
+# KPP/custom mechanism generated with KPP.  This will avoid a compiler
 # warning and a restart of the KPP library build.  This only has to be done
 # for release types "Release" and "RelWithDebugInfo".
 #   -- Bob Yantosca (16 Feb 2023)
