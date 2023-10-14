@@ -206,14 +206,6 @@ CONTAINS
                                      State_Grid%NZ, State_Chm%nAdvect       )
 
     ! Local copy of all necessary KPP inputs
-    REAL(fp)               :: C_3D(State_Grid%NX, State_Grid%NY,     &
-                                           State_Grid%NZ, NSPEC             )
-    REAL(fp)               :: RCONST_3D(State_Grid%NX, State_Grid%NY,     &
-                                           State_Grid%NZ, NREACT            )
-    REAL(fp)               :: ICNTRL_3D(State_Grid%NX, State_Grid%NY,     &
-                                            State_Grid%NZ, 20               )
-    REAL(fp)               :: RCNTRL_3D(State_Grid%NX, State_Grid%NY,     &
-                                            State_Grid%NZ, 20               )
     INTEGER                :: IJL_to_Idx(State_Grid%NX, State_Grid%NY, State_Grid%NZ)
 
     ! All the KPP inputs remapped to a 1-D array
@@ -471,9 +463,18 @@ CONTAINS
     RTOL      = 0.5e-2_dp
    
     ! For load balancing
-    C_3D(:,:,:,:) = -1.0e+10_fp
-    RCONST_3D(:,:,:,:) =  0.0e+0_fp
     NCELL_local = 0
+
+    ! Input
+    cost_1D      = 0.0e+0_fp
+    C_1D         = 0.0e+0_fp
+    RCONST_1D    = 0.0e+0_fp
+    ICNTRL_1D    = 0.0e+0_fp
+    RCNTRL_1D    = 0.0e+0_fp
+
+    ! Indexing
+    IJL_to_Idx   = 0
+    Idx_to_IJL   = 0
 
     !=======================================================================
     ! %%%%% SOLVE CHEMISTRY -- This is the main KPP solver loop %%%%%
@@ -1042,68 +1043,36 @@ CONTAINS
                                               I,         J,         L,       &
                                               ICNTRL,    RCNTRL             )
 
-       !=====================================================================
-       ! Integrate the box forwards
-       !=====================================================================
-
-       ! Populate grids pre-load balance
-       C_3D(I,J,L,:)      = C(:)
-       RCONST_3D(I,J,L,:) = RCONST(:)
-       ICNTRL_3D(I,J,L,:) = ICNTRL(:)
-       RCNTRL_3D(I,J,L,:) = RCNTRL(:)
-
        ! Make a note of how many cells we actually have
        NCELL_local = NCELL_local + 1
+       ! Populate grids pre-load balance
+       C_1D(NCELL_local,:)      = C(:)
+       RCONST_1D(NCELL_local,:) = RCONST(:)
+       ICNTRL_1D(NCELL_local,:) = ICNTRL(:)
+       RCNTRL_1D(NCELL_local,:) = RCNTRL(:)
+
+       IJL_to_Idx(I,J,L) = NCELL_local
+       Idx_to_IJL(NCELL,:) = (/ I, J, L /)
+       ! Heuristic: if cos(SZA) is around 0, we are at the terminator
+       ! Only works if cos(SZA) is still calculated in darkness
+       If (Abs(State_Met%SUNCOSmid(I,J)) .lt. 0.3e+0_fp) Then
+           cost_1D(NCELL_local) = 2.0e+0_fp
+       Else
+           cost_1D(NCELL_local) = 1.0e+0_fp
+       End If
       
     ENDDO ! I
     ENDDO ! J
     ENDDO ! L
 
     ! Balancing
-    I_CELL = 1
-
     ! NCELL_local: Number of cells in local domain which need a calculation
     ! NCELL:       Number of cells we are running a calculation for after balancing
-    NCELL = 0
-
-    ! Input
-    cost_1D      = 0.0e+0_fp
-    C_1D         = 0.0e+0_fp
-    RCONST_1D    = 0.0e+0_fp
-    ICNTRL_1D    = 0.0e+0_fp
-    RCNTRL_1D    = 0.0e+0_fp
-
-    ! Indexing
-    IJL_to_Idx   = 0
-    Idx_to_IJL   = 0
+    NCELL = NCELL_local
 
     ! Output
     ISTATUS_1D   = 0.0e+0_fp
     RSTATE_1D    = 0.0e+0_fp
-
-    ! Populate arrays with data
-    ! Could do this in the prior loop but added here for clarity
-    DO L = 1, State_Grid%NZ
-    DO J = 1, State_Grid%NY
-    DO I = 1, State_Grid%NX
-        If (.not. State_Met%InChemGrid(I,J,L)) CYCLE
-        NCELL = NCELL + 1
-        IJL_to_Idx(I,J,L) = NCELL
-        Idx_to_IJL(NCELL,:) = (/ I, J, L /)
-        C_1D(NCELL,:)        = C_3D(I,J,L,:)
-        RCONST_1D(NCELL,:)   = RCONST_3D(I,J,L,:)
-        ICNTRL_1D(NCELL,:)   = ICNTRL_3D(I,J,L,:)
-        RCNTRL_1D(NCELL,:)   = RCNTRL_3D(I,J,L,:)
-        ! Heuristic: if cos(SZA) is around 0, we are at the terminator
-        ! Only works if cos(SZA) is still calculated in darkness
-        If (Abs(State_Met%SUNCOSmid(I,J)) .lt. 0.3e+0_fp) Then
-            cost_1D(NCELL) = 2.0e+0_fp
-        Else
-            cost_1D(NCELL) = 1.0e+0_fp
-        End If
-    ENDDO ! I
-    ENDDO ! J
-    ENDDO ! L
 
     !TODO: Load balancing! May need yet another copy of the key arrays
 
@@ -1288,7 +1257,6 @@ CONTAINS
 
        ENDIF
 
-
        !=====================================================================
        ! Continue upon successful return...
        !=====================================================================
@@ -1297,6 +1265,10 @@ CONTAINS
        IF ( .not. State_Chm%Do_SulfateMod_SeaSalt ) THEN
           CALL fullchem_ConvertEquivToAlk()
        ENDIF
+
+       ! Copy C back into C_1D
+       C_1D(I_CELL,:) = C(:)
+       RCONST_1D(I_CELL,:) = RCONST(:)
     ENDDO
 
     ! Reverse the load balancing
@@ -1312,6 +1284,7 @@ CONTAINS
 
        ! Copy data back in
        C       = C_1D(N,:)
+       RCONST  = RCONST_1D(N,:)
        RSTATE  = RSTATE_1D(N,:)
        ISTATUS = ISTATUS_1D(N,:)
 
