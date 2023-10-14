@@ -194,6 +194,28 @@ CONTAINS
     REAL(fp)               :: Before(State_Grid%NX, State_Grid%NY,           &
                                      State_Grid%NZ, State_Chm%nAdvect       )
 
+    ! Local copy of all necessary KPP inputs
+    REAL(fp)               :: C_3D(State_Grid%NX, State_Grid%NY,     &
+                                           State_Grid%NZ, NSPEC             )
+    REAL(fp)               :: RCONST_3D(State_Grid%NX, State_Grid%NY,     &
+                                           State_Grid%NZ, NREACT            )
+    REAL(fp)               :: ICNTRL_3D(State_Grid%NX, State_Grid%NY,     &
+                                            State_Grid%NZ, 20               )
+    REAL(fp)               :: RCNTRL_3D(State_Grid%NX, State_Grid%NY,     &
+                                            State_Grid%NZ, 20               )
+    INTEGER                :: IJL_to_Idx(State_Grid%NX, State_Grid%NY, State_Grid%NZ)
+
+    ! All the KPP inputs remapped to a 1-D array
+    INTEGER                :: NCELL_max, NCELL, NCELL_local, I_CELL
+    REAL(fP), ALLOCATABLE  :: cost_1D(:)
+    REAL(fP), ALLOCATABLE  :: C_1D(:,:)
+    REAL(fP), ALLOCATABLE  :: RCONST_1D(:,:)
+    REAL(fP), ALLOCATABLE  :: ICNTRL_1D(:,:)
+    REAL(fP), ALLOCATABLE  :: RCNTRL_1D(:,:)
+    REAL(fP), ALLOCATABLE  :: ISTATUS_1D(:,:)
+    REAL(fP), ALLOCATABLE  :: RSTATE_1D(:,:)
+    INTEGER, ALLOCATABLE   :: Idx_to_IJL(:,:)
+
     ! For tagged CO saving
     REAL(fp)               :: LCH4, PCO_TOT, PCO_CH4, PCO_NMVOC
 
@@ -444,6 +466,11 @@ CONTAINS
 
     ! Relative tolerance
     RTOL      = 0.5e-2_dp
+   
+    ! For load balancing
+    C_3D(:,:,:,:) = -1.0e+10_fp
+    RCONST_3D(:,:,:,:) =  0.0e+0_fp
+    NCELL_local = 0
 
     !=======================================================================
     ! %%%%% SOLVE CHEMISTRY -- This is the main KPP solver loop %%%%%
@@ -500,23 +527,17 @@ CONTAINS
 #endif
     !$OMP COLLAPSE( 3                                                       )&
     !$OMP SCHEDULE( DYNAMIC, 24                                             )&
-    !$OMP REDUCTION( +:errorCount                                           )
     DO L = 1, State_Grid%NZ
     DO J = 1, State_Grid%NY
     DO I = 1, State_Grid%NX
-
-       ! Skip to the end of the loop if we have failed integration twice
-       IF ( Failed2x ) CYCLE
 
        !=====================================================================
        ! Initialize private loop variables for each (I,J,L)
        ! Other private variables will be assigned in Set_Kpp_GridBox_Values
        !=====================================================================
        IERR      = 0                        ! KPP success or failure flag
-       ISTATUS   = 0.0_dp                   ! Rosenbrock output
        ICNTRL    = 0                        ! Rosenbrock input (integer)
        RCNTRL    = 0.0_fp                   ! Rosenbrock input (real)
-       RSTATE    = 0.0_dp                   ! Rosenbrock output
        SO4_FRAC  = 0.0_fp                   ! Frac of SO4 avail for photolysis
        P         = 0                        ! GEOS-Chem photolyis species ID
        LCH4      = 0.0_fp                   ! P/L diag: Methane loss rate
@@ -546,9 +567,9 @@ CONTAINS
        CALL fullchem_AR_SetKeepActive( option=.TRUE. )
 
        ! Start measuring KPP-related routine timing for this grid box
-       IF ( State_Diag%Archive_KppTime ) THEN
-          call cpu_time(TimeStart)
-       ENDIF
+       !IF ( State_Diag%Archive_KppTime ) THEN
+       !   call cpu_time(TimeStart)
+       !ENDIF
 
        !=====================================================================
        ! Get photolysis rates (daytime only)
@@ -1024,6 +1045,154 @@ CONTAINS
        ! let us reset concentrations before calling "Integrate" a 2nd time.
        C_before_integrate = C
 
+       ! Populate grids pre-load balance
+       C_3D(I,J,L,:)      = C(:)
+       RCONST_3D(I,J,L,:) = RCONST(:)
+       ICNTRL_3D(I,J,L,:) = ICNTRL(:)
+       RCNTRL_3D(I,J,L,:) = RCNTRL(:)
+
+       ! Make a note of how many cells we actually have
+       NCELL_local = NCELL_local + 1
+      
+    ENDDO ! I
+    ENDDO ! J
+    ENDDO ! L
+
+    ! Balancing
+    N = 1
+
+    ! What is the largest number of cells one PET should handle?
+    ! TODO: add MPI logic to figure this out
+    NCELL_max = (State_Grid%NX * State_Grid%NY * State_Grid%NZ)
+
+    ! NCELL_max:   Max number of cells to be computed on any domain
+    ! NCELL_local: Number of cells in local domain which need a calculation
+    ! NCELL:       Number of cells we are running a calculation for after balancing
+    NCELL = NCELL_max
+    
+    Allocate(cost_1D   (NCELL_max)       , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:cost_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate cost_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(C_1D      (NCELL_max,NSPEC) , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:C_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate C_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(RCONST_1D (NCELL_max,NREACT), STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:RCONST_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate RCONST_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(ICNTRL_1D (NCELL_max,20)    , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:ICNTRL_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate ICNTRL_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(RCNTRL_1D (NCELL_max,20)    , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:RCNTRL_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate RCNTRL_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(ISTATUS_1D(NCELL_max,20)    , STAT=RC) 
+    CALL GC_CheckVar( 'fullchem_mod.F90:ISTATUS_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate ISTATUS_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(RSTATE_1D (NCELL_max,20)    , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:RSTATE_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate RSTATE_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(Idx_to_IJL      (NCELL_max,3)     , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:Idx_to_IJL', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate Idx_to_IJL', RC, ThisLoc )
+        RETURN
+    End If
+
+    ! Input
+    cost_1D      = 0.0e+0_fp
+    C_1D         = 0.0e+0_fp
+    RCONST_1D    = 0.0e+0_fp
+    ICNTRL_1D    = 0.0e+0_fp
+    RCNTRL_1D    = 0.0e+0_fp
+
+    ! Indexing
+    IJL_to_Idx   = 0
+    Idx_to_IJL   = 0
+
+    ! Output
+    ISTATUS_1D   = 0.0e+0_fp
+    RSTATE_1D    = 0.0e+0_fp
+
+    ! Populate arrays with data
+    ! Could do this in the prior loop but added here for clarity
+    DO L = 1, State_Grid%NZ
+    DO J = 1, State_Grid%NY
+    DO I = 1, State_Grid%NX
+        If (.not. State_Met%InChemGrid(I,J,L)) CYCLE
+        IJL_to_Idx(I,J,L) = N
+        Idx_to_IJL(N,:) = (/ I, J, L /)
+        C_1D(N,:)        = C_3D(I,J,L,:)
+        RCONST_1D(N,:)   = RCONST_3D(I,J,L,:)
+        ICNTRL_1D(N,:)   = ICNTRL_3D(I,J,L,:)
+        RCNTRL_1D(N,:)   = RCNTRL_3D(I,J,L,:)
+        ! Heuristic: if cos(SZA) is around 0, we are at the terminator
+        ! Only works if cos(SZA) is still calculated in darkness
+        If (Abs(State_Met%SUNCOSmid(I,J)) .lt. 0.3e+0_fp) Then
+            cost_1D(N) = 2.0e+0_fp
+        Else
+            cost_1D(N) = 1.0e+0_fp
+        End If
+        N = N + 1
+    ENDDO ! I
+    ENDDO ! J
+    ENDDO ! L
+
+    !TODO: Load balancing! May need yet another copy of the key arrays
+
+    !$OMP PARALLEL DO                                                        &
+    !$OMP DEFAULT( SHARED                                                   )&
+    !$OMP PRIVATE( I,        J,        L,       N                           )&
+    !$OMP PRIVATE( ICNTRL,   C_before_integrate                             )&
+    !$OMP PRIVATE( SO4_FRAC, IERR,     RCNTRL,  ISTATUS,   RSTATE           )&
+    !$OMP PRIVATE( SpcID,    KppID,    F,       P,         Vloc             )&
+    !$OMP PRIVATE( Aout,     Thread,   RC,      S,         LCH4             )&
+    !$OMP PRIVATE( OHreact,  PCO_TOT,  PCO_CH4, PCO_NMVOC, SR               )&
+    !$OMP PRIVATE( SIZE_RES, LWC                                            )&
+#ifdef MODEL_GEOS
+    !$OMP PRIVATE( NOxTau,     NOxConc, NOx_weight, NOx_tau_weighted        )&
+#endif
+    !$OMP COLLAPSE( 3                                                       )&
+    !$OMP SCHEDULE( DYNAMIC, 24                                             )&
+    !$OMP REDUCTION( +:errorCount                                           )
+    DO I_CELL = 1, NCELL
+
+       ! Skip to the end of the loop if we have failed integration twice
+       IF ( Failed2x ) CYCLE
+
+       ISTATUS   = 0.0_dp                   ! Rosenbrock output
+       RSTATE    = 0.0_dp                   ! Rosenbrock output
+       IERR = 0
+
+       ! Load in data from saved arrays
+       RCONST(:)   = RCONST_1D(I_CELL,:)
+       C(:)        = C_1D(I_CELL,:)
+       ICNTRL(:)   = ICNTRL_1D(I_CELL,:)
+       RCNTRL(:)   = RCNTRL_1D(I_CELL,:)
+
+       ! In case we need to reset
+       C_before_integrate(:) = C(:)
+
        ! Start timer
        IF ( Input_Opt%useTimers ) THEN
           CALL Timer_Start( TimerName = "     Integrate 1",                  &
@@ -1045,6 +1214,10 @@ CONTAINS
                           RC        = RC                                    )
        ENDIF
 
+       ! Add to diagnostic arrays
+       RSTATE_1D(I_CELL,:)  = RSTATE(:)
+       ISTATUS_1D(I_CELL,:) = ISTATUS(:)
+
        ! Print grid box indices to screen if integrate failed
        IF ( IERR < 0 ) THEN
 
@@ -1059,13 +1232,150 @@ CONTAINS
              ENDIF
           ENDIF
 
-#if defined( MODEL_GEOS ) || defined( MODEL_WRF )
-          ! Keep track of error boxes
-          IF ( State_Diag%Archive_KppError ) THEN
-             State_Diag%KppError(I,J,L) = State_Diag%KppError(I,J,L) + 1.0
+!#if defined( MODEL_GEOS ) || defined( MODEL_WRF )
+!          ! Keep track of error boxes
+!          IF ( State_Diag%Archive_KppError ) THEN
+!             State_Diag%KppError(I,J,L) = State_Diag%KppError(I,J,L) + 1.0
+!          ENDIF
+!#endif
+
+          !=====================================================================
+          ! Try another time if it failed
+          !=====================================================================
+
+          ! Zero the first time step (Hstart, used by Rosenbrock).  Also reset
+          ! C with concentrations prior to the 1st call to "Integrate".
+          RCNTRL(3) = 0.0_dp
+          C         = C_before_integrate
+
+          ! Disable auto-reduce solver for the second iteration for safety
+          IF ( Input_Opt%Use_AutoReduce ) THEN
+             RCNTRL(12) = -1.0_dp ! without using ICNTRL
           ENDIF
+
+          ! Update rates again
+          ! NOT POSSIBLE - relevant arrays no longer exist
+          !CALL Update_RCONST( )
+          RCONST(:) = RCONST_1D(I_CELL,:)
+
+          ! Start timer
+          IF ( Input_Opt%useTimers ) THEN
+             CALL Timer_Start( TimerName = "     Integrate 2",               &
+                               InLoop    =  .TRUE.,                          &
+                               ThreadNum = Thread,                           &
+                               RC        = RC                               )
+          ENDIF
+
+          ! Call the Rosenbrock integrator (w/ auto-reduction disabled)
+          CALL Integrate( TIN,    TOUT,    ICNTRL,                           &
+                          RCNTRL, ISTATUS, RSTATE, IERR                     )
+
+          ! Stop timer
+          IF ( Input_Opt%useTimers ) THEN
+             CALL Timer_End( TimerName = "     Integrate 2",                 &
+                             InLoop    =  .TRUE.,                            &
+                             ThreadNum = Thread,                             &
+                             RC        = RC                                 )
+          ENDIF
+
+          ! Again, store ISTATUS and RSTATE
+          ! ISTATUS is all counts
+          ISTATUS_1D(I_CELL,:) = ISTATUS_1D(I_CELL,:) + ISTATUS(:)
+          RSTATE_1D(I_CELL,:) = RSTATE(:)
+
+          !==================================================================
+          ! Exit upon the second failure
+          !==================================================================
+          IF ( IERR < 0 ) THEN
+
+             ! Print error message
+             WRITE(6,     '(a   )' ) '## INTEGRATE FAILED TWICE !!! '
+             WRITE(ERRMSG,'(a,i3)' ) 'Integrator error code :', IERR
+
+#if defined( MODEL_GEOS ) || defined( MODEL_WRF )
+             IF ( Input_Opt%KppStop ) THEN
+                CALL ERROR_STOP(ERRMSG, 'INTEGRATE_KPP')
+             ELSE
+                ! Revert to concentrations prior to 1st call to "Integrate"
+                C = C_before_integrate
+             ENDIF
+
+             !! Keep track of error boxes
+             !IF ( State_Diag%Archive_KppError ) THEN
+             !   State_Diag%KppError(I,J,L) = State_Diag%KppError(I,J,L) + 1.0
+             !ENDIF
+#else
+             !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+             ! Make sure only one thread at a time executes this block
+             !$OMP CRITICAL
+             !
+             ! Set a flag to break out of loop gracefully
+             ! NOTE: You can set a GDB breakpoint here to examine the error
+             Failed2x = .TRUE.
+
+             ! Print concentrations at failure grid box
+             PRINT*, REPEAT( '#', 79 )
+             PRINT*, '### KPP DEBUG OUTPUT!'
+             PRINT*, '### Species concentrations'! at problem box ', I, J, L
+             PRINT*, REPEAT( '#', 79 )
+             DO N = 1, NSPEC
+                PRINT*, C(N), TRIM( ADJUSTL( SPC_NAMES(N) ) )
+             ENDDO
+
+             ! Print rate constants at failure grid box
+             PRINT*, REPEAT( '#', 79 )
+             PRINT*, '### KPP DEBUG OUTPUT!'
+             PRINT*, '### Reaction rates'! at problem box ', I, J, L
+             PRINT*, REPEAT( '#', 79 )
+             DO N = 1, NREACT
+                PRINT*, RCONST(N), TRIM( ADJUSTL( EQN_NAMES(N) ) )
+             ENDDO
+             !
+             !$OMP END CRITICAL
+             !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+             ! Start skipping to end of loop upon 2 failures in a row
+             CYCLE
 #endif
+          ENDIF
+
        ENDIF
+
+
+       !=====================================================================
+       ! Continue upon successful return...
+       !=====================================================================
+
+       ! Revert Alkalinity (only when using sulfur chemistry in KPP)
+       IF ( .not. State_Chm%Do_SulfateMod_SeaSalt ) THEN
+          CALL fullchem_ConvertEquivToAlk()
+       ENDIF
+    ENDDO
+
+    ! Reverse the load balancing
+    ! TODO
+    
+    DO L = 1, State_Grid%NZ
+    DO J = 1, State_Grid%NY
+    DO I = 1, State_Grid%NX
+       N = IJL_to_Idx(I,J,L)
+       C       = C_1D(N,:)
+       RSTATE  = RSTATE_1D(N,:)
+       ISTATUS = ISTATUS_1D(N,:)
+
+       ! Save Hnew (the last predicted but not taken step) from the 3rd slot
+       ! of RSTATE into State_Chm so that it can be written to the restart
+       ! file.  For simulations that are broken into multiple stages,
+       ! Hstart will be initialized to the value of Hnew from the restart
+       ! file at startup (see above).
+       State_Chm%KPPHvalue(I,J,L) = RSTATE(Nhnew)
+
+       ! Save cpu time spent for bulk of KPP-related routines for 
+       ! History archival (hplin, 11/8/21)
+       !IF ( State_Diag%Archive_KppTime ) THEN
+       !   call cpu_time(TimeEnd)
+       !   State_Diag%KppTime(I,J,L) = TimeEnd - TimeStart
+       !ENDIF
 
        !=====================================================================
        ! HISTORY: Archive KPP solver diagnostics
@@ -1119,183 +1429,6 @@ CONTAINS
           IF ( Input_Opt%Use_AutoReduce ) THEN
              CALL fullchem_AR_UpdateKppDiags( I, J, L, RSTATE, State_Diag )
           ENDIF
-       ENDIF
-
-       !=====================================================================
-       ! Try another time if it failed
-       !=====================================================================
-       IF ( IERR < 0 ) THEN
-
-          ! Zero the first time step (Hstart, used by Rosenbrock).  Also reset
-          ! C with concentrations prior to the 1st call to "Integrate".
-          RCNTRL(3) = 0.0_dp
-          C         = C_before_integrate
-
-          ! Disable auto-reduce solver for the second iteration for safety
-          IF ( Input_Opt%Use_AutoReduce ) THEN
-             RCNTRL(12) = -1.0_dp ! without using ICNTRL
-          ENDIF
-
-          ! Update rates again
-          CALL Update_RCONST( )
-
-          ! Start timer
-          IF ( Input_Opt%useTimers ) THEN
-             CALL Timer_Start( TimerName = "     Integrate 2",               &
-                               InLoop    =  .TRUE.,                          &
-                               ThreadNum = Thread,                           &
-                               RC        = RC                               )
-          ENDIF
-
-          ! Call the Rosenbrock integrator (w/ auto-reduction disabled)
-          CALL Integrate( TIN,    TOUT,    ICNTRL,                           &
-                          RCNTRL, ISTATUS, RSTATE, IERR                     )
-
-          ! Stop timer
-          IF ( Input_Opt%useTimers ) THEN
-             CALL Timer_End( TimerName = "     Integrate 2",                 &
-                             InLoop    =  .TRUE.,                            &
-                             ThreadNum = Thread,                             &
-                             RC        = RC                                 )
-          ENDIF
-
-          !==================================================================
-          ! HISTORY: Archive KPP solver diagnostics
-          ! This time, add to the existing value
-          !
-          ! !TODO: Abstract this into a separate routine
-          !==================================================================
-          IF ( State_Diag%Archive_KppDiags ) THEN
-
-             ! # of integrator calls
-             IF ( State_Diag%Archive_KppIntCounts ) THEN
-                State_Diag%KppIntCounts(I,J,L) =                             &
-                State_Diag%KppIntCounts(I,J,L) + ISTATUS(1)
-             ENDIF
-
-             ! # of times Jacobian was constructed
-             IF ( State_Diag%Archive_KppJacCounts ) THEN
-                State_Diag%KppJacCounts(I,J,L) =                             &
-                State_Diag%KppJacCounts(I,J,L) + ISTATUS(2)
-             ENDIF
-
-             ! # of internal timesteps
-             IF ( State_Diag%Archive_KppTotSteps ) THEN
-                State_Diag%KppTotSteps(I,J,L) =                              &
-                State_Diag%KppTotSteps(I,J,L) + ISTATUS(3)
-             ENDIF
-
-             ! # of accepted internal timesteps
-             IF ( State_Diag%Archive_KppAccSteps ) THEN
-                State_Diag%KppAccSteps(I,J,L) =                              &
-                State_Diag%KppAccSteps(I,J,L) + ISTATUS(4)
-             ENDIF
-
-             ! # of rejected internal timesteps
-             IF ( State_Diag%Archive_KppRejSteps ) THEN
-                State_Diag%KppRejSteps(I,J,L) =                              &
-                State_Diag%KppRejSteps(I,J,L) + ISTATUS(5)
-             ENDIF
-
-             ! # of LU-decompositions
-             IF ( State_Diag%Archive_KppLuDecomps ) THEN
-                State_Diag%KppLuDecomps(I,J,L) =                             &
-                State_Diag%KppLuDecomps(I,J,L) + ISTATUS(6)
-             ENDIF
-
-             ! # of forward and backwards substitutions
-             IF ( State_Diag%Archive_KppSubsts ) THEN
-                State_Diag%KppSubsts(I,J,L) =                                &
-                State_Diag%KppSubsts(I,J,L) + ISTATUS(7)
-             ENDIF
-
-             ! # of singular-matrix decompositions
-!             IF ( State_Diag%Archive_KppSmDecomps ) THEN
-!                State_Diag%KppSmDecomps(I,J,L) =                             &
-!                State_Diag%KppSmDecomps(I,J,L) + ISTATUS(8)
-!             ENDIF
-          ENDIF
-
-          !==================================================================
-          ! Exit upon the second failure
-          !==================================================================
-          IF ( IERR < 0 ) THEN
-
-             ! Print error message
-             WRITE(6,     '(a   )' ) '## INTEGRATE FAILED TWICE !!! '
-             WRITE(ERRMSG,'(a,i3)' ) 'Integrator error code :', IERR
-
-#if defined( MODEL_GEOS ) || defined( MODEL_WRF )
-             IF ( Input_Opt%KppStop ) THEN
-                CALL ERROR_STOP(ERRMSG, 'INTEGRATE_KPP')
-             ELSE
-                ! Revert to concentrations prior to 1st call to "Integrate"
-                C = C_before_integrate
-             ENDIF
-
-             ! Keep track of error boxes
-             IF ( State_Diag%Archive_KppError ) THEN
-                State_Diag%KppError(I,J,L) = State_Diag%KppError(I,J,L) + 1.0
-             ENDIF
-#else
-             !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-             ! Make sure only one thread at a time executes this block
-             !$OMP CRITICAL
-             !
-             ! Set a flag to break out of loop gracefully
-             ! NOTE: You can set a GDB breakpoint here to examine the error
-             Failed2x = .TRUE.
-
-             ! Print concentrations at failure grid box
-             PRINT*, REPEAT( '#', 79 )
-             PRINT*, '### KPP DEBUG OUTPUT!'
-             PRINT*, '### Species concentrations at problem box ', I, J, L
-             PRINT*, REPEAT( '#', 79 )
-             DO N = 1, NSPEC
-                PRINT*, C(N), TRIM( ADJUSTL( SPC_NAMES(N) ) )
-             ENDDO
-
-             ! Print rate constants at failure grid box
-             PRINT*, REPEAT( '#', 79 )
-             PRINT*, '### KPP DEBUG OUTPUT!'
-             PRINT*, '### Reaction rates at problem box ', I, J, L
-             PRINT*, REPEAT( '#', 79 )
-             DO N = 1, NREACT
-                PRINT*, RCONST(N), TRIM( ADJUSTL( EQN_NAMES(N) ) )
-             ENDDO
-             !
-             !$OMP END CRITICAL
-             !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-             ! Start skipping to end of loop upon 2 failures in a row
-             CYCLE
-#endif
-          ENDIF
-
-       ENDIF
-
-
-       !=====================================================================
-       ! Continue upon successful return...
-       !=====================================================================
-
-       ! Revert Alkalinity (only when using sulfur chemistry in KPP)
-       IF ( .not. State_Chm%Do_SulfateMod_SeaSalt ) THEN
-          CALL fullchem_ConvertEquivToAlk()
-       ENDIF
-
-       ! Save Hnew (the last predicted but not taken step) from the 3rd slot
-       ! of RSTATE into State_Chm so that it can be written to the restart
-       ! file.  For simulations that are broken into multiple stages,
-       ! Hstart will be initialized to the value of Hnew from the restart
-       ! file at startup (see above).
-       State_Chm%KPPHvalue(I,J,L) = RSTATE(Nhnew)
-
-       ! Save cpu time spent for bulk of KPP-related routines for 
-       ! History archival (hplin, 11/8/21)
-       IF ( State_Diag%Archive_KppTime ) THEN
-          call cpu_time(TimeEnd)
-          State_Diag%KppTime(I,J,L) = TimeEnd - TimeStart
        ENDIF
 
        !=====================================================================
@@ -1563,6 +1696,55 @@ CONTAINS
     ENDDO
     ENDDO
     !$OMP END PARALLEL DO
+
+    Deallocate(cost_1D, STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:cost_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to deallocate cost_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Deallocate(C_1D, STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:C_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to deallocate C_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Deallocate(RCONST_1D, STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:RCONST_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to deallocate RCONST_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Deallocate(ICNTRL_1D, STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:ICNTRL_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to deallocate ICNTRL_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Deallocate(RCNTRL_1D, STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:RCNTRL_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to deallocate RCNTRL_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Deallocate(ISTATUS_1D, STAT=RC) 
+    CALL GC_CheckVar( 'fullchem_mod.F90:ISTATUS_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to deallocate ISTATUS_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Deallocate(RSTATE_1D, STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:RSTATE_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to deallocate RSTATE_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Deallocate(Idx_to_IJL, STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:Idx_to_IJL', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to deallocate Idx_to_IJL', RC, ThisLoc )
+        RETURN
+    End If
 
     ! Stop timer
     IF ( Input_Opt%useTimers ) THEN
