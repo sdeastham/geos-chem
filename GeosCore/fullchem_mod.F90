@@ -1075,6 +1075,16 @@ CONTAINS
     RSTATE_1D    = 0.0e+0_fp
 
     !TODO: Load balancing! May need yet another copy of the key arrays
+#ifdef MODEL_GCHPCTM
+    Write(*,*) 'Barrier A met'
+    Call MPI_Barrier(Input_Opt%mpiComm, RC)
+    If (RC.ne.0) Then
+       ErrMsg = 'Error encountered during load redistribution A!'
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    End If
+    Write(*,*) 'Barrier A passed'
+#endif
 
     !$OMP PARALLEL DO                                                        &
     !$OMP DEFAULT( SHARED                                                   )&
@@ -1273,6 +1283,16 @@ CONTAINS
 
     ! Reverse the load balancing
     ! TODO
+#ifdef MODEL_GCHPCTM
+    Write(*,*) 'Barrier Z met'
+    Call MPI_Barrier(Input_Opt%mpiComm, RC)
+    If (RC.ne.0) Then
+       ErrMsg = 'Error encountered during load redistribution Z!'
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    End If
+    Write(*,*) 'Barrier Z passed'
+#endif
     
     DO L = 1, State_Grid%NZ
     DO J = 1, State_Grid%NY
