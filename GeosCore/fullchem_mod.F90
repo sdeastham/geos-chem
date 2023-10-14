@@ -39,6 +39,7 @@ MODULE FullChem_Mod
   INTEGER               :: id_OH,  id_HO2,  id_O3P,  id_O1D, id_CH4
   INTEGER               :: id_PCO, id_LCH4, id_NH3,  id_SO4
   INTEGER               :: id_SALAAL, id_SALCAL, id_SALC, id_SALA
+  INTEGER               :: NCELL_MAX
 #ifdef MODEL_GEOS
   INTEGER               :: id_O3
   INTEGER               :: id_A3O2, id_ATO2, id_B3O2, id_BRO2
@@ -71,6 +72,16 @@ MODULE FullChem_Mod
   REAL(f4), ALLOCATABLE :: JvCountMon(:,:,:  )
   REAL(f4), ALLOCATABLE :: JvSumDay  (:,:,:,:)
   REAL(f4), ALLOCATABLE :: JvSumMon  (:,:,:,:)
+
+  ! For load balancing
+  REAL(fP), ALLOCATABLE  :: cost_1D(:)
+  REAL(fP), ALLOCATABLE  :: C_1D(:,:)
+  REAL(fP), ALLOCATABLE  :: RCONST_1D(:,:)
+  REAL(fP), ALLOCATABLE  :: ICNTRL_1D(:,:)
+  REAL(fP), ALLOCATABLE  :: RCNTRL_1D(:,:)
+  REAL(fP), ALLOCATABLE  :: ISTATUS_1D(:,:)
+  REAL(fP), ALLOCATABLE  :: RSTATE_1D(:,:)
+  INTEGER, ALLOCATABLE   :: Idx_to_IJL(:,:)
 
 CONTAINS
 !EOC
@@ -206,15 +217,7 @@ CONTAINS
     INTEGER                :: IJL_to_Idx(State_Grid%NX, State_Grid%NY, State_Grid%NZ)
 
     ! All the KPP inputs remapped to a 1-D array
-    INTEGER                :: NCELL_max, NCELL, NCELL_local, I_CELL
-    REAL(fP), ALLOCATABLE  :: cost_1D(:)
-    REAL(fP), ALLOCATABLE  :: C_1D(:,:)
-    REAL(fP), ALLOCATABLE  :: RCONST_1D(:,:)
-    REAL(fP), ALLOCATABLE  :: ICNTRL_1D(:,:)
-    REAL(fP), ALLOCATABLE  :: RCNTRL_1D(:,:)
-    REAL(fP), ALLOCATABLE  :: ISTATUS_1D(:,:)
-    REAL(fP), ALLOCATABLE  :: RSTATE_1D(:,:)
-    INTEGER, ALLOCATABLE   :: Idx_to_IJL(:,:)
+    INTEGER                :: NCELL, NCELL_local, I_CELL
 
     ! For tagged CO saving
     REAL(fp)               :: LCH4, PCO_TOT, PCO_CH4, PCO_NMVOC
@@ -1032,6 +1035,8 @@ CONTAINS
        ! Set options for the KPP integrator in vectors ICNTRL and RCNTRL
        ! This now needs to be done within the parallel loop
        !=====================================================================
+       ! CRITICAL: unless ICNTRL(15) is set to -1, RCONST and SUN end up
+       ! getting recomputed inside the integrator!
        CALL fullchem_AR_SetIntegratorOptions( Input_Opt, State_Chm,          &
                                               State_Met, FirstChem,          &
                                               I,         J,         L,       &
@@ -1040,10 +1045,6 @@ CONTAINS
        !=====================================================================
        ! Integrate the box forwards
        !=====================================================================
-
-       ! Store concentrations before the call to "Integrate".  This will
-       ! let us reset concentrations before calling "Integrate" a 2nd time.
-       C_before_integrate = C
 
        ! Populate grids pre-load balance
        C_3D(I,J,L,:)      = C(:)
@@ -1059,65 +1060,11 @@ CONTAINS
     ENDDO ! L
 
     ! Balancing
-    N = 1
+    I_CELL = 1
 
-    ! What is the largest number of cells one PET should handle?
-    ! TODO: add MPI logic to figure this out
-    NCELL_max = (State_Grid%NX * State_Grid%NY * State_Grid%NZ)
-
-    ! NCELL_max:   Max number of cells to be computed on any domain
     ! NCELL_local: Number of cells in local domain which need a calculation
     ! NCELL:       Number of cells we are running a calculation for after balancing
-    NCELL = NCELL_max
-    
-    Allocate(cost_1D   (NCELL_max)       , STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:cost_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to allocate cost_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Allocate(C_1D      (NCELL_max,NSPEC) , STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:C_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to allocate C_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Allocate(RCONST_1D (NCELL_max,NREACT), STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:RCONST_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to allocate RCONST_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Allocate(ICNTRL_1D (NCELL_max,20)    , STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:ICNTRL_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to allocate ICNTRL_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Allocate(RCNTRL_1D (NCELL_max,20)    , STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:RCNTRL_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to allocate RCNTRL_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Allocate(ISTATUS_1D(NCELL_max,20)    , STAT=RC) 
-    CALL GC_CheckVar( 'fullchem_mod.F90:ISTATUS_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to allocate ISTATUS_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Allocate(RSTATE_1D (NCELL_max,20)    , STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:RSTATE_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to allocate RSTATE_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Allocate(Idx_to_IJL      (NCELL_max,3)     , STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:Idx_to_IJL', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to allocate Idx_to_IJL', RC, ThisLoc )
-        RETURN
-    End If
+    NCELL = 0
 
     ! Input
     cost_1D      = 0.0e+0_fp
@@ -1140,20 +1087,20 @@ CONTAINS
     DO J = 1, State_Grid%NY
     DO I = 1, State_Grid%NX
         If (.not. State_Met%InChemGrid(I,J,L)) CYCLE
-        IJL_to_Idx(I,J,L) = N
-        Idx_to_IJL(N,:) = (/ I, J, L /)
-        C_1D(N,:)        = C_3D(I,J,L,:)
-        RCONST_1D(N,:)   = RCONST_3D(I,J,L,:)
-        ICNTRL_1D(N,:)   = ICNTRL_3D(I,J,L,:)
-        RCNTRL_1D(N,:)   = RCNTRL_3D(I,J,L,:)
+        NCELL = NCELL + 1
+        IJL_to_Idx(I,J,L) = NCELL
+        Idx_to_IJL(NCELL,:) = (/ I, J, L /)
+        C_1D(NCELL,:)        = C_3D(I,J,L,:)
+        RCONST_1D(NCELL,:)   = RCONST_3D(I,J,L,:)
+        ICNTRL_1D(NCELL,:)   = ICNTRL_3D(I,J,L,:)
+        RCNTRL_1D(NCELL,:)   = RCNTRL_3D(I,J,L,:)
         ! Heuristic: if cos(SZA) is around 0, we are at the terminator
         ! Only works if cos(SZA) is still calculated in darkness
         If (Abs(State_Met%SUNCOSmid(I,J)) .lt. 0.3e+0_fp) Then
-            cost_1D(N) = 2.0e+0_fp
+            cost_1D(NCELL) = 2.0e+0_fp
         Else
-            cost_1D(N) = 1.0e+0_fp
+            cost_1D(NCELL) = 1.0e+0_fp
         End If
-        N = N + 1
     ENDDO ! I
     ENDDO ! J
     ENDDO ! L
@@ -1358,7 +1305,12 @@ CONTAINS
     DO L = 1, State_Grid%NZ
     DO J = 1, State_Grid%NY
     DO I = 1, State_Grid%NX
-       N = IJL_to_Idx(I,J,L)
+
+       ! Figure out which cell the data should be allocated to
+       N       = IJL_to_Idx(I,J,L)
+       If (N.le.0) Cycle
+
+       ! Copy data back in
        C       = C_1D(N,:)
        RSTATE  = RSTATE_1D(N,:)
        ISTATUS = ISTATUS_1D(N,:)
@@ -1696,55 +1648,6 @@ CONTAINS
     ENDDO
     ENDDO
     !$OMP END PARALLEL DO
-
-    Deallocate(cost_1D, STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:cost_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to deallocate cost_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Deallocate(C_1D, STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:C_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to deallocate C_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Deallocate(RCONST_1D, STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:RCONST_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to deallocate RCONST_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Deallocate(ICNTRL_1D, STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:ICNTRL_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to deallocate ICNTRL_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Deallocate(RCNTRL_1D, STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:RCNTRL_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to deallocate RCNTRL_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Deallocate(ISTATUS_1D, STAT=RC) 
-    CALL GC_CheckVar( 'fullchem_mod.F90:ISTATUS_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to deallocate ISTATUS_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Deallocate(RSTATE_1D, STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:RSTATE_1D', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to deallocate RSTATE_1D', RC, ThisLoc )
-        RETURN
-    End If
-    Deallocate(Idx_to_IJL, STAT=RC)
-    CALL GC_CheckVar( 'fullchem_mod.F90:Idx_to_IJL', 0, RC )
-    IF ( RC /= GC_SUCCESS ) Then
-        CALL GC_Error( 'Failed to deallocate Idx_to_IJL', RC, ThisLoc )
-        RETURN
-    End If
 
     ! Stop timer
     IF ( Input_Opt%useTimers ) THEN
@@ -2728,7 +2631,7 @@ CONTAINS
 !\\
 ! !INTERFACE:
 !
-  SUBROUTINE Init_FullChem( Input_Opt, State_Chm, State_Diag, RC )
+  SUBROUTINE Init_FullChem( Input_Opt, State_Chm, State_Diag, State_Grid, RC )
 !
 ! !USES:
 !
@@ -2737,18 +2640,20 @@ CONTAINS
     USE fullchem_SulfurChemFuncs, ONLY : fullchem_InitSulfurChem
     USE Gckpp_Monitor,            ONLY : Eqn_Names, Fam_Names
     USE Gckpp_Precision
-    USE Gckpp_Parameters,         ONLY : nFam, nReact
+    USE Gckpp_Parameters,         ONLY : nFam, nReact, nSpec
     USE Gckpp_Global,             ONLY : Henry_K0, Henry_CR, MW, SR_MW
     USE Input_Opt_Mod,            ONLY : OptInput
     USE State_Chm_Mod,            ONLY : ChmState
     USE State_Chm_Mod,            ONLY : Ind_
     USE State_Diag_Mod,           ONLY : DgnState
+    USE State_Grid_Mod,           ONLY : GrdState
 !
 ! !INPUT PARAMETERS:
 !
     TYPE(OptInput), INTENT(IN)  :: Input_Opt   ! Input Options object
     TYPE(ChmState), INTENT(IN)  :: State_Chm   ! Diagnostics State object
     TYPE(DgnState), INTENT(IN)  :: State_Diag  ! Diagnostics State object
+    TYPE(GrdState), INTENT(IN)  :: State_Grid  ! Grid State object
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -2974,6 +2879,60 @@ CONTAINS
        ENDIF
     ENDIF
 
+    ! What is the largest number of cells any one PET should handle?
+    ! TODO: add MPI logic to figure this out
+    NCELL_max = (State_Grid%NX * State_Grid%NY * State_Grid%NZ)
+    ! NCELL_max:   Max number of cells to be computed on any domain
+    
+    Allocate(cost_1D   (NCELL_max)       , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:cost_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate cost_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(C_1D      (NCELL_max,NSPEC) , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:C_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate C_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(RCONST_1D (NCELL_max,NREACT), STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:RCONST_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate RCONST_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(ICNTRL_1D (NCELL_max,20)    , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:ICNTRL_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate ICNTRL_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(RCNTRL_1D (NCELL_max,20)    , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:RCNTRL_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate RCNTRL_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(ISTATUS_1D(NCELL_max,20)    , STAT=RC) 
+    CALL GC_CheckVar( 'fullchem_mod.F90:ISTATUS_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate ISTATUS_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(RSTATE_1D (NCELL_max,20)    , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:RSTATE_1D', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate RSTATE_1D', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(Idx_to_IJL      (NCELL_max,3)     , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:Idx_to_IJL', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate Idx_to_IJL', RC, ThisLoc )
+        RETURN
+    End If
+
   END SUBROUTINE Init_FullChem
 !EOC
 !------------------------------------------------------------------------------
@@ -3039,6 +2998,55 @@ CONTAINS
     IF ( ALLOCATED( JvSumMon ) ) THEN
        DEALLOCATE( JvSumMon, STAT=RC  )
        CALL GC_CheckVar( 'fullchem_mod.F90:JvCountMon', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    ! Arrays for load balancing
+    If ( ALLOCATED( cost_1D ) ) Then
+       Deallocate(cost_1D, STAT=RC)
+       CALL GC_CheckVar( 'fullchem_mod.F90:cost_1D', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    If ( ALLOCATED( C_1D ) ) Then
+       Deallocate(C_1D, STAT=RC)
+       CALL GC_CheckVar( 'fullchem_mod.F90:C_1D', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    If ( ALLOCATED( RCONST_1D ) ) Then
+       Deallocate(RCONST_1D, STAT=RC)
+       CALL GC_CheckVar( 'fullchem_mod.F90:RCONST_1D', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    If ( ALLOCATED( ICNTRL_1D ) ) Then
+       Deallocate(ICNTRL_1D, STAT=RC)
+       CALL GC_CheckVar( 'fullchem_mod.F90:ICNTRL_1D', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    If ( ALLOCATED( RCNTRL_1D ) ) Then
+       Deallocate(RCNTRL_1D, STAT=RC)
+       CALL GC_CheckVar( 'fullchem_mod.F90:RCNTRL_1D', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    If ( ALLOCATED( ISTATUS_1D ) ) Then
+       Deallocate(ISTATUS_1D, STAT=RC) 
+       CALL GC_CheckVar( 'fullchem_mod.F90:ISTATUS_1D', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    If ( ALLOCATED( RSTATE_1D ) ) Then
+       Deallocate(RSTATE_1D, STAT=RC)
+       CALL GC_CheckVar( 'fullchem_mod.F90:RSTATE_1D', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    If ( ALLOCATED( Idx_to_IJL ) ) Then
+       Deallocate(Idx_to_IJL, STAT=RC)
+       CALL GC_CheckVar( 'fullchem_mod.F90:Idx_to_IJL', 2, RC )
        IF ( RC /= GC_SUCCESS ) RETURN
     ENDIF
 
