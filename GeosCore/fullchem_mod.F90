@@ -1058,13 +1058,15 @@ CONTAINS
        ! Make a note of how many cells we actually have
        NCELL_local = NCELL_local + 1
        ! Populate grids pre-load balance
-       C_1D(NCELL_local,:)      = C(:)
-       RCONST_1D(NCELL_local,:) = RCONST(:)
-       ICNTRL_1D(NCELL_local,:) = ICNTRL(:)
-       RCNTRL_1D(NCELL_local,:) = RCNTRL(:)
+       ! NB: need NCELL to be the last index to facilitate simple and
+       ! efficient MPI data transfer
+       C_1D(:,NCELL_local)      = C(:)
+       RCONST_1D(:,NCELL_local) = RCONST(:)
+       ICNTRL_1D(:,NCELL_local) = ICNTRL(:)
+       RCNTRL_1D(:,NCELL_local) = RCNTRL(:)
 
        IJL_to_Idx(I,J,L) = NCELL_local
-       Idx_to_IJL(NCELL,:) = (/ I, J, L /)
+       Idx_to_IJL(:,NCELL_local) = (/ I, J, L /)
        ! Heuristic: if cos(SZA) is around 0, we are at the terminator
        ! Only works if cos(SZA) is still calculated in darkness
        If (Abs(State_Met%SUNCOSmid(I,J)) .lt. 0.3e+0_fp) Then
@@ -1154,10 +1156,10 @@ CONTAINS
        IERR = 0
 
        ! Load in data from saved arrays
-       RCONST(:)   = RCONST_balanced(I_CELL,:)
-       C(:)        = C_balanced(I_CELL,:)
-       ICNTRL(:)   = ICNTRL_balanced(I_CELL,:)
-       RCNTRL(:)   = RCNTRL_balanced(I_CELL,:)
+       RCONST(:)   = RCONST_balanced(:,I_CELL)
+       C(:)        = C_balanced(:,I_CELL)
+       ICNTRL(:)   = ICNTRL_balanced(:,I_CELL)
+       RCNTRL(:)   = RCNTRL_balanced(:,I_CELL)
 
        ! In case we need to reset
        C_before_integrate(:) = C(:)
@@ -1184,8 +1186,8 @@ CONTAINS
        ENDIF
 
        ! Add to diagnostic arrays
-       RSTATE_balanced(I_CELL,:)  = RSTATE(:)
-       ISTATUS_balanced(I_CELL,:) = ISTATUS(:)
+       RSTATE_balanced(:,I_CELL)  = RSTATE(:)
+       ISTATUS_balanced(:,I_CELL) = ISTATUS(:)
 
        ! Print grid box indices to screen if integrate failed
        IF ( IERR < 0 ) THEN
@@ -1225,7 +1227,7 @@ CONTAINS
           ! Update rates again
           ! NOT POSSIBLE - relevant arrays no longer exist
           !CALL Update_RCONST( )
-          RCONST(:) = RCONST_balanced(I_CELL,:)
+          RCONST(:) = RCONST_balanced(:,I_CELL)
 
           ! Start timer
           IF ( Input_Opt%useTimers ) THEN
@@ -1249,8 +1251,8 @@ CONTAINS
 
           ! Again, store ISTATUS and RSTATE
           ! ISTATUS is all counts
-          ISTATUS_balanced(I_CELL,:) = ISTATUS_balanced(I_CELL,:) + ISTATUS(:)
-          RSTATE_balanced(I_CELL,:) = RSTATE(:)
+          ISTATUS_balanced(:,I_CELL) = ISTATUS_balanced(:,I_CELL) + ISTATUS(:)
+          RSTATE_balanced(:,I_CELL) = RSTATE(:)
 
           !==================================================================
           ! Exit upon the second failure
@@ -1320,12 +1322,11 @@ CONTAINS
        ENDIF
 
        ! Copy C back into C_1D
-       C_balanced(I_CELL,:) = C(:)
-       RCONST_balanced(I_CELL,:) = RCONST(:)
+       C_balanced(:,I_CELL) = C(:)
+       RCONST_balanced(:,I_CELL) = RCONST(:)
     ENDDO
 
     ! Reverse the load balancing
-    ! TODO
 #ifdef MODEL_GCHPCTM
     ! Pass the actual arrays (can we reduce the pass to just NCELL_local?)
     Call MPI_Isend(C_balanced(1,1),NCELL_max*NSPEC,MPI_DOUBLE_PRECISION,prev_PET,0,Input_Opt%mpiComm,request,RC)
@@ -1353,10 +1354,10 @@ CONTAINS
        If (N.le.0) Cycle
 
        ! Copy data back in
-       C       = C_1D(N,:)
-       RCONST  = RCONST_1D(N,:)
-       RSTATE  = RSTATE_1D(N,:)
-       ISTATUS = ISTATUS_1D(N,:)
+       C       = C_1D(:,N)
+       RCONST  = RCONST_1D(:,N)
+       RSTATE  = RSTATE_1D(:,N)
+       ISTATUS = ISTATUS_1D(:,N)
 
        ! Save Hnew (the last predicted but not taken step) from the 3rd slot
        ! of RSTATE into State_Chm so that it can be written to the restart
@@ -2933,79 +2934,79 @@ CONTAINS
         CALL GC_Error( 'Failed to allocate cost_1D', RC, ThisLoc )
         RETURN
     End If
-    Allocate(C_1D      (NCELL_max,NSPEC) , STAT=RC)
+    Allocate(C_1D      (NSPEC,NCELL_max) , STAT=RC)
     CALL GC_CheckVar( 'fullchem_mod.F90:C_1D', 0, RC )
     IF ( RC /= GC_SUCCESS ) Then
         CALL GC_Error( 'Failed to allocate C_1D', RC, ThisLoc )
         RETURN
     End If
-    Allocate(RCONST_1D (NCELL_max,NREACT), STAT=RC)
+    Allocate(RCONST_1D (NREACT,NCELL_max), STAT=RC)
     CALL GC_CheckVar( 'fullchem_mod.F90:RCONST_1D', 0, RC )
     IF ( RC /= GC_SUCCESS ) Then
         CALL GC_Error( 'Failed to allocate RCONST_1D', RC, ThisLoc )
         RETURN
     End If
-    Allocate(ICNTRL_1D (NCELL_max,20)    , STAT=RC)
+    Allocate(ICNTRL_1D (20,NCELL_max)    , STAT=RC)
     CALL GC_CheckVar( 'fullchem_mod.F90:ICNTRL_1D', 0, RC )
     IF ( RC /= GC_SUCCESS ) Then
         CALL GC_Error( 'Failed to allocate ICNTRL_1D', RC, ThisLoc )
         RETURN
     End If
-    Allocate(RCNTRL_1D (NCELL_max,20)    , STAT=RC)
+    Allocate(RCNTRL_1D (20,NCELL_max)    , STAT=RC)
     CALL GC_CheckVar( 'fullchem_mod.F90:RCNTRL_1D', 0, RC )
     IF ( RC /= GC_SUCCESS ) Then
         CALL GC_Error( 'Failed to allocate RCNTRL_1D', RC, ThisLoc )
         RETURN
     End If
-    Allocate(ISTATUS_1D(NCELL_max,20)    , STAT=RC) 
+    Allocate(ISTATUS_1D(20,NCELL_max)    , STAT=RC) 
     CALL GC_CheckVar( 'fullchem_mod.F90:ISTATUS_1D', 0, RC )
     IF ( RC /= GC_SUCCESS ) Then
         CALL GC_Error( 'Failed to allocate ISTATUS_1D', RC, ThisLoc )
         RETURN
     End If
-    Allocate(RSTATE_1D (NCELL_max,20)    , STAT=RC)
+    Allocate(RSTATE_1D (20,NCELL_max)    , STAT=RC)
     CALL GC_CheckVar( 'fullchem_mod.F90:RSTATE_1D', 0, RC )
     IF ( RC /= GC_SUCCESS ) Then
         CALL GC_Error( 'Failed to allocate RSTATE_1D', RC, ThisLoc )
         RETURN
     End If
-    Allocate(Idx_to_IJL      (NCELL_max,3)     , STAT=RC)
+    Allocate(Idx_to_IJL      (3,NCELL_max)     , STAT=RC)
     CALL GC_CheckVar( 'fullchem_mod.F90:Idx_to_IJL', 0, RC )
     IF ( RC /= GC_SUCCESS ) Then
         CALL GC_Error( 'Failed to allocate Idx_to_IJL', RC, ThisLoc )
         RETURN
     End If
-    Allocate(C_balanced      (NCELL_max,NSPEC) , STAT=RC)
+    Allocate(C_balanced      (NSPEC,NCELL_max) , STAT=RC)
     CALL GC_CheckVar( 'fullchem_mod.F90:C_balanced', 0, RC )
     IF ( RC /= GC_SUCCESS ) Then
         CALL GC_Error( 'Failed to allocate C_balanced', RC, ThisLoc )
         RETURN
     End If
-    Allocate(RCONST_balanced (NCELL_max,NREACT), STAT=RC)
+    Allocate(RCONST_balanced (NREACT,NCELL_max), STAT=RC)
     CALL GC_CheckVar( 'fullchem_mod.F90:RCONST_balanced', 0, RC )
     IF ( RC /= GC_SUCCESS ) Then
         CALL GC_Error( 'Failed to allocate RCONST_balanced', RC, ThisLoc )
         RETURN
     End If
-    Allocate(ICNTRL_balanced (NCELL_max,20)    , STAT=RC)
+    Allocate(ICNTRL_balanced (20,NCELL_max)    , STAT=RC)
     CALL GC_CheckVar( 'fullchem_mod.F90:ICNTRL_balanced', 0, RC )
     IF ( RC /= GC_SUCCESS ) Then
         CALL GC_Error( 'Failed to allocate ICNTRL_balanced', RC, ThisLoc )
         RETURN
     End If
-    Allocate(RCNTRL_balanced (NCELL_max,20)    , STAT=RC)
+    Allocate(RCNTRL_balanced (20,NCELL_max)    , STAT=RC)
     CALL GC_CheckVar( 'fullchem_mod.F90:RCNTRL_balanced', 0, RC )
     IF ( RC /= GC_SUCCESS ) Then
         CALL GC_Error( 'Failed to allocate RCNTRL_balanced', RC, ThisLoc )
         RETURN
     End If
-    Allocate(ISTATUS_balanced(NCELL_max,20)    , STAT=RC) 
+    Allocate(ISTATUS_balanced(20,NCELL_max)    , STAT=RC) 
     CALL GC_CheckVar( 'fullchem_mod.F90:ISTATUS_balanced', 0, RC )
     IF ( RC /= GC_SUCCESS ) Then
         CALL GC_Error( 'Failed to allocate ISTATUS_balanced', RC, ThisLoc )
         RETURN
     End If
-    Allocate(RSTATE_balanced (NCELL_max,20)    , STAT=RC)
+    Allocate(RSTATE_balanced (20,NCELL_max)    , STAT=RC)
     CALL GC_CheckVar( 'fullchem_mod.F90:RSTATE_balanced', 0, RC )
     IF ( RC /= GC_SUCCESS ) Then
         CALL GC_Error( 'Failed to allocate RSTATE_balanced', RC, ThisLoc )
