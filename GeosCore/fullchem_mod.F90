@@ -77,11 +77,17 @@ MODULE FullChem_Mod
   REAL(fP), ALLOCATABLE  :: cost_1D(:)
   REAL(fP), ALLOCATABLE  :: C_1D(:,:)
   REAL(fP), ALLOCATABLE  :: RCONST_1D(:,:)
-  REAL(fP), ALLOCATABLE  :: ICNTRL_1D(:,:)
+  INTEGER,  ALLOCATABLE  :: ICNTRL_1D(:,:)
   REAL(fP), ALLOCATABLE  :: RCNTRL_1D(:,:)
-  REAL(fP), ALLOCATABLE  :: ISTATUS_1D(:,:)
+  INTEGER,  ALLOCATABLE  :: ISTATUS_1D(:,:)
   REAL(fP), ALLOCATABLE  :: RSTATE_1D(:,:)
   INTEGER, ALLOCATABLE   :: Idx_to_IJL(:,:)
+  REAL(fP), ALLOCATABLE  :: C_balanced(:,:)
+  REAL(fP), ALLOCATABLE  :: RCONST_balanced(:,:)
+  INTEGER,  ALLOCATABLE  :: ICNTRL_balanced(:,:)
+  REAL(fP), ALLOCATABLE  :: RCNTRL_balanced(:,:)
+  INTEGER,  ALLOCATABLE  :: ISTATUS_balanced(:,:)
+  REAL(fP), ALLOCATABLE  :: RSTATE_balanced(:,:)
 
 CONTAINS
 !EOC
@@ -144,6 +150,9 @@ CONTAINS
 #ifdef BPCH_DIAG
     USE TOMAS_MOD,                ONLY : H2SO4_RATE
 #endif
+#endif
+#ifdef MODEL_GCHPCTM
+    USE MPI
 #endif
 !
 ! !INPUT PARAMETERS:
@@ -209,7 +218,8 @@ CONTAINS
     INTEGER                :: IJL_to_Idx(State_Grid%NX, State_Grid%NY, State_Grid%NZ)
 
     ! All the KPP inputs remapped to a 1-D array
-    INTEGER                :: NCELL, NCELL_local, I_CELL
+    INTEGER                :: NCELL, NCELL_local, I_CELL, NCELL_balanced
+    INTEGER                :: this_PET, prev_PET, next_PET, request
 
     ! For tagged CO saving
     REAL(fp)               :: LCH4, PCO_TOT, PCO_CH4, PCO_NMVOC
@@ -1037,7 +1047,9 @@ CONTAINS
        ! This now needs to be done within the parallel loop
        !=====================================================================
        ! CRITICAL: unless ICNTRL(15) is set to -1, RCONST and SUN end up
-       ! getting recomputed inside the integrator!
+       ! getting recomputed inside the integrator! This would result in failure
+       ! of the load balancing scheme as the input arrays are based on the final
+       ! cell in the above loop.
        CALL fullchem_AR_SetIntegratorOptions( Input_Opt, State_Chm,          &
                                               State_Met, FirstChem,          &
                                               I,         J,         L,       &
@@ -1071,19 +1083,50 @@ CONTAINS
     NCELL = NCELL_local
 
     ! Output
-    ISTATUS_1D   = 0.0e+0_fp
-    RSTATE_1D    = 0.0e+0_fp
+    ISTATUS_1D       = 0.0e+0_fp
+    RSTATE_1D        = 0.0e+0_fp
+    ISTATUS_balanced = 0.0e+0_fp
+    RSTATE_balanced  = 0.0e+0_fp
 
     !TODO: Load balancing! May need yet another copy of the key arrays
 #ifdef MODEL_GCHPCTM
-    Write(*,*) 'Barrier A met'
-    Call MPI_Barrier(Input_Opt%mpiComm, RC)
-    If (RC.ne.0) Then
-       ErrMsg = 'Error encountered during load redistribution A!'
-       CALL GC_Error( ErrMsg, RC, ThisLoc )
-       RETURN
-    End If
-    Write(*,*) 'Barrier A passed'
+    ! For now - just pass your copy "right" (to the next CPU)
+    ! Recall that CPU numbering is zero-indexed
+    this_PET = Input_Opt%thisCPU
+    if (this_PET == (Input_Opt%numCPUs-1)) then
+        next_PET = 0
+    else
+        next_PET = this_PET + 1
+    endif
+    if (this_PET == 0) then
+        prev_PET = Input_Opt%numCPUs - 1
+    else
+        prev_PET = this_PET - 1
+    endif
+    ! How many cells are to be processed?
+    !write(*,*) 'SEND NCELL', this_PET, next_PET
+    Call MPI_Isend(NCELL_local,1,MPI_INTEGER,next_PET,0,Input_Opt%mpiComm,request,RC)
+    Call MPI_Recv(NCELL_balanced,1,MPI_INTEGER,prev_PET,0,Input_Opt%mpiComm,MPI_STATUS_IGNORE,RC)
+    ! Pass the actual arrays (can we reduce the pass to just NCELL_local?)
+    !write(*,*) 'SEND C', this_PET, next_PET
+    Call MPI_Isend(C_1D(1,1),NCELL_max*NSPEC,MPI_DOUBLE_PRECISION,next_PET,0,Input_Opt%mpiComm,request,RC)
+    Call MPI_Recv(C_balanced(1,1),NCELL_max*NSPEC,MPI_DOUBLE_PRECISION,prev_PET,0,Input_Opt%mpiComm,MPI_STATUS_IGNORE,RC)
+    !write(*,*) 'SEND RCONST', this_PET, next_PET
+    Call MPI_Isend(RCONST_1D(1,1),NCELL_max*NREACT,MPI_DOUBLE_PRECISION,next_PET,0,Input_Opt%mpiComm,request,RC)
+    Call MPI_Recv(RCONST_balanced(1,1),NCELL_max*NREACT,MPI_DOUBLE_PRECISION,prev_PET,0,Input_Opt%mpiComm,MPI_STATUS_IGNORE,RC)
+    !write(*,*) 'SEND ICNTRL', this_PET, next_PET
+    Call MPI_Isend(ICNTRL_1D(1,1),NCELL_max*20,MPI_INTEGER,next_PET,0,Input_Opt%mpiComm,request,RC)
+    Call MPI_Recv(ICNTRL_balanced(1,1),NCELL_max*20,MPI_INTEGER,prev_PET,0,Input_Opt%mpiComm,MPI_STATUS_IGNORE,RC)
+    !write(*,*) 'SEND RCNTRL', this_PET, next_PET
+    Call MPI_Isend(RCNTRL_1D(1,1),NCELL_max*20,MPI_DOUBLE_PRECISION,next_PET,0,Input_Opt%mpiComm,request,RC)
+    Call MPI_Recv(RCNTRL_balanced(1,1),NCELL_max*20,MPI_DOUBLE_PRECISION,prev_PET,0,Input_Opt%mpiComm,MPI_STATUS_IGNORE,RC)
+    !write(*,*) 'SEND DONE ON', this_PET
+    !Call MPI_Barrier(Input_Opt%mpiComm, RC)
+    !If (RC.ne.0) Then
+    !   ErrMsg = 'Error encountered during load redistribution A!'
+    !   CALL GC_Error( ErrMsg, RC, ThisLoc )
+    !   RETURN
+    !End If
 #endif
 
     !$OMP PARALLEL DO                                                        &
@@ -1101,7 +1144,7 @@ CONTAINS
     !$OMP COLLAPSE( 3                                                       )&
     !$OMP SCHEDULE( DYNAMIC, 24                                             )&
     !$OMP REDUCTION( +:errorCount                                           )
-    DO I_CELL = 1, NCELL
+    DO I_CELL = 1, NCELL_balanced
 
        ! Skip to the end of the loop if we have failed integration twice
        IF ( Failed2x ) CYCLE
@@ -1111,10 +1154,10 @@ CONTAINS
        IERR = 0
 
        ! Load in data from saved arrays
-       RCONST(:)   = RCONST_1D(I_CELL,:)
-       C(:)        = C_1D(I_CELL,:)
-       ICNTRL(:)   = ICNTRL_1D(I_CELL,:)
-       RCNTRL(:)   = RCNTRL_1D(I_CELL,:)
+       RCONST(:)   = RCONST_balanced(I_CELL,:)
+       C(:)        = C_balanced(I_CELL,:)
+       ICNTRL(:)   = ICNTRL_balanced(I_CELL,:)
+       RCNTRL(:)   = RCNTRL_balanced(I_CELL,:)
 
        ! In case we need to reset
        C_before_integrate(:) = C(:)
@@ -1141,8 +1184,8 @@ CONTAINS
        ENDIF
 
        ! Add to diagnostic arrays
-       RSTATE_1D(I_CELL,:)  = RSTATE(:)
-       ISTATUS_1D(I_CELL,:) = ISTATUS(:)
+       RSTATE_balanced(I_CELL,:)  = RSTATE(:)
+       ISTATUS_balanced(I_CELL,:) = ISTATUS(:)
 
        ! Print grid box indices to screen if integrate failed
        IF ( IERR < 0 ) THEN
@@ -1182,7 +1225,7 @@ CONTAINS
           ! Update rates again
           ! NOT POSSIBLE - relevant arrays no longer exist
           !CALL Update_RCONST( )
-          RCONST(:) = RCONST_1D(I_CELL,:)
+          RCONST(:) = RCONST_balanced(I_CELL,:)
 
           ! Start timer
           IF ( Input_Opt%useTimers ) THEN
@@ -1206,8 +1249,8 @@ CONTAINS
 
           ! Again, store ISTATUS and RSTATE
           ! ISTATUS is all counts
-          ISTATUS_1D(I_CELL,:) = ISTATUS_1D(I_CELL,:) + ISTATUS(:)
-          RSTATE_1D(I_CELL,:) = RSTATE(:)
+          ISTATUS_balanced(I_CELL,:) = ISTATUS_balanced(I_CELL,:) + ISTATUS(:)
+          RSTATE_balanced(I_CELL,:) = RSTATE(:)
 
           !==================================================================
           ! Exit upon the second failure
@@ -1277,21 +1320,28 @@ CONTAINS
        ENDIF
 
        ! Copy C back into C_1D
-       C_1D(I_CELL,:) = C(:)
-       RCONST_1D(I_CELL,:) = RCONST(:)
+       C_balanced(I_CELL,:) = C(:)
+       RCONST_balanced(I_CELL,:) = RCONST(:)
     ENDDO
 
     ! Reverse the load balancing
     ! TODO
 #ifdef MODEL_GCHPCTM
-    Write(*,*) 'Barrier Z met'
-    Call MPI_Barrier(Input_Opt%mpiComm, RC)
-    If (RC.ne.0) Then
-       ErrMsg = 'Error encountered during load redistribution Z!'
-       CALL GC_Error( ErrMsg, RC, ThisLoc )
-       RETURN
-    End If
-    Write(*,*) 'Barrier Z passed'
+    ! Pass the actual arrays (can we reduce the pass to just NCELL_local?)
+    Call MPI_Isend(C_balanced(1,1),NCELL_max*NSPEC,MPI_DOUBLE_PRECISION,prev_PET,0,Input_Opt%mpiComm,request,RC)
+    Call MPI_Recv(C_1D(1,1),NCELL_max*NSPEC,MPI_DOUBLE_PRECISION,next_PET,0,Input_Opt%mpiComm,MPI_STATUS_IGNORE,RC)
+    Call MPI_Isend(ISTATUS_balanced(1,1),NCELL_max*20,MPI_INTEGER,prev_PET,0,Input_Opt%mpiComm,request,RC)
+    Call MPI_Recv(ISTATUS_1D(1,1),NCELL_max*20,MPI_INTEGER,next_PET,0,Input_Opt%mpiComm,MPI_STATUS_IGNORE,RC)
+    Call MPI_Isend(RSTATE_balanced(1,1),NCELL_max*20,MPI_DOUBLE_PRECISION,prev_PET,0,Input_Opt%mpiComm,request,RC)
+    Call MPI_Recv(RSTATE_1D(1,1),NCELL_max*20,MPI_DOUBLE_PRECISION,next_PET,0,Input_Opt%mpiComm,MPI_STATUS_IGNORE,RC)
+    !Call MPI_Barrier(Input_Opt%mpiComm, RC)
+    Call MPI_Isend(RCONST_balanced(1,1),NCELL_max*NREACT,MPI_DOUBLE_PRECISION,prev_PET,0,Input_Opt%mpiComm,request,RC)
+    Call MPI_Recv(RCONST_1D(1,1),NCELL_max*NREACT,MPI_DOUBLE_PRECISION,next_PET,0,Input_Opt%mpiComm,MPI_STATUS_IGNORE,RC)
+    !If (RC.ne.0) Then
+    !   ErrMsg = 'Error encountered during load redistribution Z!'
+    !   CALL GC_Error( ErrMsg, RC, ThisLoc )
+    !   RETURN
+    !End If
 #endif
     
     DO L = 1, State_Grid%NZ
@@ -2925,6 +2975,42 @@ CONTAINS
         CALL GC_Error( 'Failed to allocate Idx_to_IJL', RC, ThisLoc )
         RETURN
     End If
+    Allocate(C_balanced      (NCELL_max,NSPEC) , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:C_balanced', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate C_balanced', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(RCONST_balanced (NCELL_max,NREACT), STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:RCONST_balanced', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate RCONST_balanced', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(ICNTRL_balanced (NCELL_max,20)    , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:ICNTRL_balanced', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate ICNTRL_balanced', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(RCNTRL_balanced (NCELL_max,20)    , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:RCNTRL_balanced', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate RCNTRL_balanced', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(ISTATUS_balanced(NCELL_max,20)    , STAT=RC) 
+    CALL GC_CheckVar( 'fullchem_mod.F90:ISTATUS_balanced', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate ISTATUS_balanced', RC, ThisLoc )
+        RETURN
+    End If
+    Allocate(RSTATE_balanced (NCELL_max,20)    , STAT=RC)
+    CALL GC_CheckVar( 'fullchem_mod.F90:RSTATE_balanced', 0, RC )
+    IF ( RC /= GC_SUCCESS ) Then
+        CALL GC_Error( 'Failed to allocate RSTATE_balanced', RC, ThisLoc )
+        RETURN
+    End If
 
   END SUBROUTINE Init_FullChem
 !EOC
@@ -3040,6 +3126,42 @@ CONTAINS
     If ( ALLOCATED( Idx_to_IJL ) ) Then
        Deallocate(Idx_to_IJL, STAT=RC)
        CALL GC_CheckVar( 'fullchem_mod.F90:Idx_to_IJL', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    If ( ALLOCATED( C_balanced ) ) Then
+       Deallocate(C_balanced, STAT=RC)
+       CALL GC_CheckVar( 'fullchem_mod.F90:C_balanced', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    If ( ALLOCATED( RCONST_balanced ) ) Then
+       Deallocate(RCONST_balanced, STAT=RC)
+       CALL GC_CheckVar( 'fullchem_mod.F90:RCONST_balanced', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    If ( ALLOCATED( ICNTRL_balanced ) ) Then
+       Deallocate(ICNTRL_balanced, STAT=RC)
+       CALL GC_CheckVar( 'fullchem_mod.F90:ICNTRL_balanced', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    If ( ALLOCATED( RCNTRL_balanced ) ) Then
+       Deallocate(RCNTRL_balanced, STAT=RC)
+       CALL GC_CheckVar( 'fullchem_mod.F90:RCNTRL_balanced', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    If ( ALLOCATED( ISTATUS_balanced ) ) Then
+       Deallocate(ISTATUS_balanced, STAT=RC) 
+       CALL GC_CheckVar( 'fullchem_mod.F90:ISTATUS_balanced', 2, RC )
+       IF ( RC /= GC_SUCCESS ) RETURN
+    ENDIF
+
+    If ( ALLOCATED( RSTATE_balanced ) ) Then
+       Deallocate(RSTATE_balanced, STAT=RC)
+       CALL GC_CheckVar( 'fullchem_mod.F90:RSTATE_balanced', 2, RC )
        IF ( RC /= GC_SUCCESS ) RETURN
     ENDIF
 
