@@ -1743,7 +1743,7 @@ CONTAINS
           ! All-sky SW flux @ tropopause [W/m2]
           IF ( State_Diag%Archive_RadAllSkySWTrop ) THEN
              State_Diag%RadAllSkySWTrop(I,J,iNcDiag) = &
-                  SW_DFLUX(I,J,iTrop)
+                  SW_DFLUX(I,J,iTrop)-SW_UFLUX(I,J,iTrop)
           ENDIF
 
           ! All-sky SW flux @ surface [W/m2]
@@ -1761,7 +1761,7 @@ CONTAINS
           ! All-sky LW flux @ tropopause [W/m2]
           IF ( State_Diag%Archive_RadAllSkyLWTrop ) THEN
              State_Diag%RadAllSkyLWTrop(I,J,iNcDiag) = &
-                  LW_DFLUX(I,J,iTrop)
+                  LW_DFLUX(I,J,iTrop)-LW_UFLUX(I,J,iTrop)
           ENDIF
 
           ! All-sky LW flux @ surface [W/m2]
@@ -1779,7 +1779,7 @@ CONTAINS
           ! Clear-sky SW flux @ tropopause [W/m2]
           IF ( State_Diag%Archive_RadClrSkySWTrop ) THEN
              State_Diag%RadClrSkySWTrop(I,J,iNcDiag) = &
-                  SW_DFLUXC(I,J,iTrop)
+                  SW_DFLUXC(I,J,iTrop)-SW_UFLUXC(I,J,iTrop)
           ENDIF
 
           ! Clear-sky SW flux @ surface [W/m2]
@@ -1797,7 +1797,7 @@ CONTAINS
           ! Clear-sky LW flux @ tropopause [W/m2]
           IF ( State_Diag%Archive_RadClrSkyLWTrop ) THEN
              State_Diag%RadClrSkyLWTrop(I,J,iNcDiag) = &
-                  -LW_UFLUXC(I,J,iTrop)
+                  LW_DFLUXC(I,J,iTrop)-LW_UFLUXC(I,J,iTrop)
           ENDIF
 
           ! Clear-sky LW flux @ surface [W/m2]
@@ -1821,7 +1821,7 @@ CONTAINS
           ! Clear-sky SW flux @ tropopause [W/m2]
           IF ( State_Diag%Archive_RadClrSkySWTrop ) THEN
              State_Diag%RadClrSkySWTrop(I,J,iNcDiag) = &
-                  -SW_UFLUXC(I,J,iTrop)
+                  SW_DLUXC(I,J,iTrop)-SW_UFLUXC(I,J,iTrop)
           ENDIF
 
           ! Clear-sky SW flux @ surface [W/m2]
@@ -1839,7 +1839,7 @@ CONTAINS
           ! Clear-sky LW flux @ tropopause [W/m2]
           IF ( State_Diag%Archive_RadClrSkyLWTrop ) THEN
              State_Diag%RadClrSkyLWTrop(I,J,iNcDiag) = &
-                  -LW_UFLUXC(I,J,iTrop)
+                  LW_DFLUXC(I,J,iTrop)-LW_UFLUXC(I,J,iTrop)
           ENDIF
 
           ! Clear-sky LW flux @ surface [W/m2]
