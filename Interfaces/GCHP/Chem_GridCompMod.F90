@@ -1237,6 +1237,7 @@ CONTAINS
 
     INTEGER                     :: IL_WORLD, JL_WORLD    ! # lower indices in global grid
     INTEGER                     :: IU_WORLD, JU_WORLD    ! # upper indices in global grid
+    INTEGER :: LM_STRAT, LM_TROP
 
     __Iam__('Initialize_')
 
@@ -1456,6 +1457,18 @@ CONTAINS
     CALL Init_State_Grid( Input_Opt, State_Grid, RC )
     _ASSERT(RC==GC_SUCCESS,'Error calling Init_State_Grid')
 
+    ! Hard coding - bah
+    If (LM .eq. 72) Then
+       LM_STRAT = 59
+       LM_TROP  = 40
+    Else if (LM .eq.32) Then
+       LM_STRAT = 32
+       LM_TROP  = 20 ! ~150 hPa for 1013.25 Pa surface pressure
+    Else
+       LM_STRAT = LM
+       LM_TROP  = LM
+    End If
+
     ! Pass grid information obtained from Extract_ to State_Grid
     State_Grid%NX          = IM            ! # lons   on this PET
     State_Grid%NY          = JM            ! # lats   on this PET
@@ -1467,11 +1480,11 @@ CONTAINS
     State_Grid%XMaxOffset  = State_Grid%NX ! X offset from global grid
     State_Grid%YMinOffset  = 1             ! Y offset from global grid
     State_Grid%YMaxOffset  = State_Grid%NY ! Y offset from global grid
-    State_Grid%MaxTropLev  = 40            ! # trop. levels
+    State_Grid%MaxTropLev  = MIN(LM_TROP,LM)    ! # trop. levels
 #if defined( MODEL_GEOS )
     State_Grid%MaxStratLev = value_LLSTRAT ! # strat. levels
 #else
-    State_Grid%MaxStratLev = 59            ! # strat. levels
+    State_Grid%MaxStratLev = MIN(LM_STRAT,LM)    ! # strat. levels
 #endif
 
     ! Call the GCHP initialize routine
