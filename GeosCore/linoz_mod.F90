@@ -345,7 +345,7 @@ CONTAINS
 
           LBOT = State_Met%ChemGridLev(I,J) + 1
           LPOS = 1
-          DO WHILE (State_Met%PEDGE(I,J,LPOS+1) .GE. 0.3e+0_f8)
+          DO WHILE ((LPOS.lt.State_Grid%NZ) .and. (State_Met%PEDGE(I,J,LPOS+1) .GE. 0.3e+0_f8))
              LPOS = LPOS +1
           ENDDO
           LPOS = LPOS-1
